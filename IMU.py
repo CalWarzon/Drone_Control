@@ -1,6 +1,7 @@
 import time
 import json
 import numpy as np
+from mpu6050 import mpu6050
 
 
 class IMU:
@@ -24,6 +25,9 @@ class IMU:
         self.angle = np.zeros(3)
         self.last_time = time.time()
 
+        #Create MPU-6050 Connection
+        self.IMU = mpu6050(0x68)
+
     # ---------------------------
     # BASIC UTILITIES
     # ---------------------------
@@ -32,6 +36,9 @@ class IMU:
 
     def LowPass(self, new, old):
         return self.alpha_lp * new + (1 - self.alpha_lp) * old
+
+    def GetRawData(self):
+
 
     # ---------------------------
     # STANDARD + SCALE CALIBRATION

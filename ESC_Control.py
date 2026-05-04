@@ -1,5 +1,4 @@
 import pigpio
-import os
 import time as t
 from mpu6050 import mpu6050
 
