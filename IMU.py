@@ -5,6 +5,9 @@ from mpu6050 import mpu6050
 
 
 class IMU:
+    #accel: g
+    #gyro: deg/sec
+    #Orientation: deg
     def __init__(self, connection = 0x68):
         self.calibration = {
             "accel_bias": np.zeros(3),
@@ -12,18 +15,27 @@ class IMU:
             "accel_scale": np.ones(3),
             "gyro_scale": np.ones(3),
             "temp_points": [],  # multi-point temp calibration
-            "temp_poly_coeffs": None,
+            "temp_poly_coeffs_gyro": None,
+            "temp_poly_coeffs_accel": None,
             "rotation_matrix": np.eye(3)
         }
 
         # Filtering / state
         self.filtered_accel = np.zeros(3)
         self.filtered_gyro = np.zeros(3)
-        self.alpha_lp = 0.2  # low-pass filter strength
+        self.alpha_lp = 0.35  # low-pass filter strength
 
         # Complementary filter state
         self.angle = np.zeros(3)
         self.last_time = time.time()
+
+        #Scaleing
+        self.accel_range = 2      # g
+        self.gyro_range = 250     # deg/sec
+        self.accel_lsb = 16384
+        self.gyro_lsb = 131.0
+        self.accel_regs = 0x00
+        self.gyro_regs = 0x00
 
         #Create MPU-6050 Connection
         self.IMUInput = mpu6050(connection)
@@ -36,6 +48,57 @@ class IMU:
 
     def LowPass(self, new, old):
         return self.alpha_lp * new + (1 - self.alpha_lp) * old
+
+    def SetSensorRanges(self, accel_range=2, gyro_range=250):
+        accel_scales = {
+        2: 16384,
+        4: 8192,
+        8: 4096,
+        16: 2048
+    }
+
+        gyro_scales = {
+        250: 131.0,
+        500: 65.5,
+        1000: 32.8,
+        2000: 16.4
+    }
+
+        if accel_range not in accel_scales:
+            raise ValueError("Invalid accel range")
+
+        if gyro_range not in gyro_scales:
+            raise ValueError("Invalid gyro range")
+
+        self.accel_range = accel_range
+        self.gyro_range = gyro_range
+
+        self.accel_lsb = accel_scales[accel_range]
+        self.gyro_lsb = gyro_scales[gyro_range]
+
+        accel_registers = {
+        2: 0x00,
+        4: 0x08,
+        8: 0x10,
+        16: 0x18 
+        }
+        gyro_registers = {
+        250: 0x00,
+        500: 0x08,
+        1000: 0x10,
+        2000: 0x18
+        }
+        
+        self.accel_regs = accel_registers[accel_range]
+        self.gyro_regs = gyro_registers[gyro_range]
+
+        self.SetAccelRange(self.accel_regs)
+        self.SetGyroRange(self.gyro_regs)
+
+        print(
+            f"Accel: ±{accel_range}g ({self.accel_lsb} LSB/g), "
+            f"Gyro: ±{gyro_range}°/s ({self.gyro_lsb} LSB/deg/s)"
+        )
 
     #----------------------------
     # RAW MPU-6050 CONNECTION
@@ -89,7 +152,7 @@ class IMU:
         gyro_mean = np.mean(gyro, axis=0)
 
         # Bias
-        self.calibration["accel_bias"] = accel_mean - np.array([0, 0, 16384])
+        self.calibration["accel_bias"] = accel_mean - np.array([0, 0, self.accel_lsb])
         self.calibration["gyro_bias"] = gyro_mean
 
         print("Standard calibration complete.")
@@ -106,7 +169,7 @@ class IMU:
             input(f"Place -{axis} axis up. Press ENTER")
             neg = np.mean([self.read_accel_raw() for _ in range(200)], axis=0)
 
-            scale_factor = (2 * 16384) / (pos[axis] - neg[axis])
+            scale_factor = (2 * self.accel_lsb) / (pos[axis] - neg[axis])
             scale.append(scale_factor)
 
         self.calibration["accel_scale"] = np.array(scale)
@@ -117,39 +180,53 @@ class IMU:
     # ---------------------------
     def CalibrateTemperatureMulti(self, points=4):
         print("Temperature calibration (multi-point)")
+        print("Use freezer → room temp sweep for best results")
+
+        self.calibration["temp_points"] = []
 
         for i in range(points):
-            input(f"Set temperature point {i+1}, then press ENTER")
+            input(f"Stabilize at temp point {i+1}, press ENTER")
 
             accel = []
             gyro = []
             temps = []
 
             for _ in range(200):
-                accel.append(self.read_accel_raw())
-                gyro.append(self.read_gyro_raw())
-                temps.append(self.ConvertTemp(self.read_temp_raw()))
+                ax, ay, az = self.read_accel_raw()
+                gx, gy, gz = self.read_gyro_raw()
+                t = self.ConvertTemp(self.read_temp_raw())
+
+                accel.append([ax, ay, az])
+                gyro.append([gx, gy, gz])
+                temps.append(t)
+
                 time.sleep(0.01)
 
             self.calibration["temp_points"].append({
                 "temp": float(np.mean(temps)),
-                "accel_bias": np.mean(accel, axis=0).tolist(),
-                "gyro_bias": np.mean(gyro, axis=0).tolist()
-            })
+                "accel_bias": np.mean(accel, axis=0),
+                "gyro_bias": np.mean(gyro, axis=0)
+        })
 
         self.FitTempPolynomial()
 
     def FitTempPolynomial(self):
-        temps = [p["temp"] for p in self.calibration["temp_points"]]
-        gyro_biases = [p["gyro_bias"] for p in self.calibration["temp_points"]]
+        temps = np.array([p["temp"] for p in self.calibration["temp_points"]])
 
-        coeffs = []
+        accel_biases = np.array([p["accel_bias"] for p in self.calibration["temp_points"]])
+        gyro_biases  = np.array([p["gyro_bias"]  for p in self.calibration["temp_points"]])
+
+        accel_coeffs = []
+        gyro_coeffs = []
+
         for axis in range(3):
-            axis_bias = [b[axis] for b in gyro_biases]
-            coeffs.append(np.polyfit(temps, axis_bias, 2))
+            accel_coeffs.append(np.polyfit(temps, accel_biases[:, axis], 2))
+            gyro_coeffs.append(np.polyfit(temps, gyro_biases[:, axis], 2))
 
-        self.calibration["temp_poly_coeffs"] = coeffs
-        print("Temperature polynomial fitted.")
+        self.calibration["temp_poly_coeffs_accel"] = accel_coeffs
+        self.calibration["temp_poly_coeffs_gyro"] = gyro_coeffs
+
+        print("Temperature calibration (accel + gyro) complete.")
 
     # ---------------------------
     # AXIS MISALIGNMENT
@@ -165,20 +242,26 @@ class IMU:
 
         accel = np.array([ax, ay, az], dtype=float)
         gyro = np.array([gx, gy, gz], dtype=float)
-
-        # Bias
-        accel -= self.calibration["accel_bias"]
-        gyro -= self.calibration["gyro_bias"]
-
-        # Scale
-        accel *= self.calibration["accel_scale"]
-        gyro *= self.calibration["gyro_scale"]
+        rawGyro = gyro
 
         # Temperature polynomial compensation (gyro)
-        if self.calibration["temp_poly_coeffs"] is not None:
+        if self.calibration["temp_poly_coeffs_gyro"] is not None:
             for i in range(3):
-                poly = self.calibration["temp_poly_coeffs"][i]
-                gyro[i] -= np.polyval(poly, temp)
+                gyro[i] -= np.polyval(self.calibration["temp_poly_coeffs_gyro"][i], temp)
+        if self.calibration["temp_poly_coeffs_accel"] is not None:
+            for i in range(3):
+                accel[i] -= np.polyval(self.calibration["temp_poly_coeffs_accel"][i], temp)
+
+        # Bias
+        accel = accel - self.calibration["accel_bias"]
+        gyro  = gyro  - self.calibration["gyro_bias"]
+
+        #Calibrated Scale
+        accel *= self.calibration["accel_scale"]
+
+        #Scale Values to gs and deg/s
+        accel = accel / self.accel_lsb
+        gyro = gyro / self.gyro_lsb
 
         # Axis alignment
         R = self.calibration["rotation_matrix"]
@@ -190,10 +273,10 @@ class IMU:
         self.filtered_gyro = self.LowPass(gyro, self.filtered_gyro)
 
         # Online drift correction (if stable)
-        if np.linalg.norm(self.filtered_accel - np.array([0, 0, 16384])) < 500:
+        if abs(np.linalg.norm(self.filtered_accel) - 1.0) < 0.1:
             self.calibration["gyro_bias"] = (
                 0.999 * self.calibration["gyro_bias"] +
-                0.001 * gyro
+                0.001 * rawGyro
             )
 
         return self.filtered_accel, self.filtered_gyro, temp
@@ -210,10 +293,11 @@ class IMU:
         gx, gy, gz = self.filtered_gyro
 
         # Convert accel to angles
-        accel_angle_x = np.arctan2(ay, az)
-        accel_angle_y = np.arctan2(-ax, np.sqrt(ay**2 + az**2))
+        accel_angle_x = np.degrees(np.arctan2(ay, az))
+        accel_angle_y = np.degrees(np.arctan2(-ax, np.sqrt(ay**2 + az**2)))
 
         # Integrate gyro
+        
         self.angle[0] += gx * dt
         self.angle[1] += gy * dt
 
@@ -227,27 +311,54 @@ class IMU:
     # ---------------------------
     # SAVE / LOAD
     # ---------------------------
+    def _to_serializable(obj):
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
+        elif isinstance(obj, dict):
+            return {k: _to_serializable(v) for k, v in obj.items()}
+        elif isinstance(obj, list):
+            return [_to_serializable(v) for v in obj]
+        else:
+            return obj
+
+
+    def _from_serializable(obj):
+        if isinstance(obj, list):
+            try:
+                arr = np.array(obj)
+                if np.issubdtype(arr.dtype, np.number):
+                    return arr
+            except:
+                pass
+            return [_from_serializable(v) for v in obj]
+
+        elif isinstance(obj, dict):
+            return {k: _from_serializable(v) for k, v in obj.items()}
+        return obj
+
     def SaveCalibration(self, filename="imu_cal.json"):
-        data = {
-            k: (v.tolist() if isinstance(v, np.ndarray) else v)
-            for k, v in self.calibration.items()
-        }
-        data.update({"gyro_range": self.GetGyroRange(), "accel_range": self.GetAccelRange()})
+        data = _to_serializable(self.calibration)
+
+        data["accel_range"] = self.accel_range
+        data["gyro_range"] = self.gyro_range
+
         with open(filename, "w") as f:
             json.dump(data, f, indent=4)
 
+        print(f"Calibration saved to {filename}")
+
     def LoadCalibration(self, filename="imu_cal.json"):
+       
         with open(filename, "r") as f:
             data = json.load(f)
 
-        for k, v in data.items():
-            if isinstance(v, list):
-                try:
-                    self.calibration[k] = np.array(v)
-                except:
-                    self.calibration[k] = v
-            else:
-                self.calibration[k] = v
+        self.calibration = _from_serializable(data)
 
-        self.SetAccelRange(self.calibration["accel_range"])
-        self.SetGyroRange(self.calibration["gyro_range"])
+        # Restore ranges safely
+        accel_range = self.calibration["accel_range"]
+        gyro_range = self.calibration["gyro_range"]
+        self.SetSensorRanges(accel_range, gyro_range)
+
+        print(f"Calibration loaded from {filename}")
+
+        
