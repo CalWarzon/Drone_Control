@@ -26,7 +26,7 @@ class IMU:
         self.last_time = time.time()
 
         #Create MPU-6050 Connection
-        self.IMU = mpu6050(0x68)
+        self.IMUInput = mpu6050(0x68)
 
     # ---------------------------
     # BASIC UTILITIES
@@ -37,8 +37,22 @@ class IMU:
     def LowPass(self, new, old):
         return self.alpha_lp * new + (1 - self.alpha_lp) * old
 
+    #----------------------------
+    # RAW MPU-6050 CONNECTION
     def GetRawData(self):
+        return self.IMUInput.get_all_data()
 
+    def GetAccelData(self):
+        return self.IMUInput.get_accel_data()
+
+    def GetGyroData(self):
+        return self.IMUInput.get_gyro_data()
+
+    def GetTempData(self):
+        return self.IMUInput.get_temp()
+
+    def RawI2C(self):
+        return self.IMUInput.read_i2c_word()
 
     # ---------------------------
     # STANDARD + SCALE CALIBRATION
