@@ -103,7 +103,7 @@ class IMU:
     #----------------------------
     # RAW MPU-6050 CONNECTION
     #----------------------------
-    def GetRawData(self):
+    def GetAllData(self):
         return self.IMUInput.get_all_data()
 
     def GetAccelData(self):
@@ -141,8 +141,8 @@ class IMU:
         gyro = []
 
         for _ in range(samples):
-            accel.append(self.read_accel_raw())
-            gyro.append(self.read_gyro_raw())
+            accel.append(self.GetAccelData())
+            gyro.append(self.GetGyroData())
             time.sleep(0.005)
 
         accel = np.array(accel)
@@ -164,10 +164,10 @@ class IMU:
 
         for axis in range(3):
             input(f"Place +{axis} axis up. Press ENTER")
-            pos = np.mean([self.read_accel_raw() for _ in range(200)], axis=0)
+            pos = np.mean([self.GetAccelData() for _ in range(200)], axis=0)
 
             input(f"Place -{axis} axis up. Press ENTER")
-            neg = np.mean([self.read_accel_raw() for _ in range(200)], axis=0)
+            neg = np.mean([self.GetAccelData() for _ in range(200)], axis=0)
 
             scale_factor = (2 * self.accel_lsb) / (pos[axis] - neg[axis])
             scale.append(scale_factor)
@@ -192,9 +192,8 @@ class IMU:
             temps = []
 
             for _ in range(200):
-                ax, ay, az = self.read_accel_raw()
-                gx, gy, gz = self.read_gyro_raw()
-                t = self.ConvertTemp(self.read_temp_raw())
+                ax, ay, az, gx, gy, gz, t = self.GetAllData()
+                t = self.ConvertTemp(t)
 
                 accel.append([ax, ay, az])
                 gyro.append([gx, gy, gz])
