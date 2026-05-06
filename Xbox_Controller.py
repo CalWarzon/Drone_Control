@@ -59,7 +59,7 @@ class XboxController:
     # ---------------------------
     # READ INPUT (NON-BLOCKING)
     # ---------------------------
-    def read(self):
+    def Read(self):
         try:
             r, _, _ = select.select([self.device.fd], [], [], 0)
 
