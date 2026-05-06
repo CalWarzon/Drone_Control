@@ -1,6 +1,6 @@
 import pigpio
 import time as t
-from mpu6050 import mpu6050
+
 
 class ESC_Brushless():
     def __init__(self, pin, maxPulseWidth = 2000, minPulseWidth = 1000):
@@ -32,21 +32,11 @@ class ESC_Brushless():
     
     def SetPWM(self, pwm):
         
-        self.pi.set_servo_pulsewidth(self.pin, pwm)
+        self.pi.set_servo_pulsewidth(pwm)
+
+    def SetSpeed(speed):
+        speed = max(0, min(1, speed))
+        pwm = self.minp + speed * (self.maxp-self.minp)
         
-'''
-accelGyro = mpu6050(0x68)
-print(accelGyro.read_accel_range())
-while True:
-    print(accelGyro.get_accel_data())
-    t.sleep(.3)
-'''
-motor = ESC_Brushless(26)
-motor.calibrate()
-t.sleep(3)
-for pwm in range(1000,1200,20):
-    print(pwm)
-    motor.speed(pwm)
-    t.sleep(8)
-motor.speed(1000)
+
 

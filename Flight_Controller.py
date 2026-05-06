@@ -40,10 +40,10 @@ class Flight_Control():
 
         # --- Motor Mixing (X quad) ---
         self.motorCommand = {
-        "FR":throttle + pitch_output + roll_output - yaw_output,
-        "FL":throttle + pitch_output - roll_output + yaw_output,
-        "BR":throttle - pitch_output - roll_output - yaw_output,
-        "BL":throttle - pitch_output + roll_output + yaw_output
+        "FR":(throttle + pitch_output + roll_output - yaw_output)*self.motorSpeedCoef,
+        "FL":(throttle + pitch_output - roll_output + yaw_output)*self.motorSpeedCoef,
+        "BR":(throttle - pitch_output - roll_output - yaw_output)*self.motorSpeedCoef,
+        "BL":(throttle - pitch_output + roll_output + yaw_output)*self.motorSpeedCoef
         }
 
         # --- Send Commands to Motors ---
@@ -52,5 +52,5 @@ class Flight_Control():
     def SetMotors(self, command):
 
         for pos, m in self.motors:
-            speed = max(0, min(1, command[pos]*self.motorSpeedCoef))
+            speed = command[pos]
             m.SetSpeed(speed)
