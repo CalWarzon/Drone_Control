@@ -272,7 +272,7 @@ class IMU:
         self.filtered_gyro = self.LowPass(gyro, self.filtered_gyro)
 
         # Online drift correction (if stable)
-        if abs(np.linalg.norm(self.filtered_accel) - 1.0) < 0.1:
+        if abs(np.linalg.norm(self.filtered_accel) - 1.0) < 0.05:
             self.calibration["gyro_bias"] = (
                 0.999 * self.calibration["gyro_bias"] +
                 0.001 * rawGyro
