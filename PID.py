@@ -33,7 +33,13 @@ class PID:
         # Mode
         self.use_gyro_derivative = use_gyro_derivative
 
-    def update(self, error, dt, gyro_rate=None):
+    def GetCoefs(self):
+        return self.kp, self.ki, self.kd
+
+    def SetCoefs(self, kp, ki, kd):
+        self.kp, self.ki, self.kd = kp, ki, kd
+
+    def Update(self, error, dt, gyro_rate=None):
         if dt <= 0:
             return 0.0
 
