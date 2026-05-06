@@ -5,7 +5,7 @@ from mpu6050 import mpu6050
 
 
 class IMU:
-    def __init__(self):
+    def __init__(self, connection = 0x68):
         self.calibration = {
             "accel_bias": np.zeros(3),
             "gyro_bias": np.zeros(3),
@@ -26,7 +26,7 @@ class IMU:
         self.last_time = time.time()
 
         #Create MPU-6050 Connection
-        self.IMUInput = mpu6050(0x68)
+        self.IMUInput = mpu6050(connection)
 
     # ---------------------------
     # BASIC UTILITIES
@@ -39,6 +39,7 @@ class IMU:
 
     #----------------------------
     # RAW MPU-6050 CONNECTION
+    #----------------------------
     def GetRawData(self):
         return self.IMUInput.get_all_data()
 
@@ -51,8 +52,20 @@ class IMU:
     def GetTempData(self):
         return self.IMUInput.get_temp()
 
-    def RawI2C(self):
+    def GetRawI2C(self):
         return self.IMUInput.read_i2c_word()
+    
+    def SetAccelRange(self, range):
+        self.IMUInput.set_accel_range(range)
+
+    def GetAccelRange(self):
+        return self.IMUInput.read_accel_range()
+
+    def SetGyroRange(self, range):
+        self.IMUInput.set_gyro_range(range)
+
+    def GetGyroRange(self):
+        return self.IMUInput.read_gyro_range()
 
     # ---------------------------
     # STANDARD + SCALE CALIBRATION
@@ -219,6 +232,7 @@ class IMU:
             k: (v.tolist() if isinstance(v, np.ndarray) else v)
             for k, v in self.calibration.items()
         }
+        data.update({"gyro_range": self.GetGyroRange(), "accel_range": self.GetAccelRange()})
         with open(filename, "w") as f:
             json.dump(data, f, indent=4)
 
@@ -234,3 +248,6 @@ class IMU:
                     self.calibration[k] = v
             else:
                 self.calibration[k] = v
+
+        self.SetAccelRange(self.calibration["accel_range"])
+        self.SetGyroRange(self.calibration["gyro_range"])
