@@ -10,7 +10,7 @@ class ESC_Brushless():
         self.pi = pigpio.pi()
         self.pi.set_servo_pulsewidth(self.pin, 0)
 
-    def calibrate(self):
+    def Calibrate(self):
         
         self.pi.set_servo_pulsewidth(self.pin, self.maxp)
         input("Connect Battery Wait for falling tone then 2 beeps then hit enter")
@@ -21,7 +21,7 @@ class ESC_Brushless():
         print("Arming ESC")
         self.pi.set_servo_pulsewidth(self.pin, self.minp)
     
-    def arm(self):
+    def Arm(self):
         
         self.pi.set_servo_pulsewidth(self.pin, 0)
         t.sleep(1)
@@ -30,9 +30,9 @@ class ESC_Brushless():
         self.pi.set_servo_pulsewidth(self.pin, self.minp)
         print("ESC armed")
     
-    def speed(self, speed):
+    def SetPWM(self, pwm):
         
-        self.pi.set_servo_pulsewidth(self.pin, speed)
+        self.pi.set_servo_pulsewidth(self.pin, pwm)
         
 '''
 accelGyro = mpu6050(0x68)
