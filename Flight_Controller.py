@@ -1,6 +1,5 @@
 class Flight_Control():
-    def __init__(self, 
-        baseThrust,
+    def __init__(self,
         pitchPID, 
         rollPID, 
         yawPID, 
@@ -12,8 +11,6 @@ class Flight_Control():
         motorSpeedCoef = 1):
 
         self.motorSpeedCoef = motorSpeedCoef
-        self.baseThrust = baseThrust
-        self.thrust = baseThrust
         self.PIDs = {"pitch":pitchPID, "roll":rollPID, "yawRate":yawPID} 
         self.IMU = IMU
         self.motors = {"FR":motorFR, "FL":motorFL, "BR":motorBR, "BL":motorBL}
@@ -34,9 +31,10 @@ class Flight_Control():
         errors = {"pitch":target_pitch - pitch, "roll":target_roll - roll, "yawRate":target_yaw_rate - gz}
         
         # --- PID Outputs ---
-        pitch_output = self.PIDs["pitch"].Update(errors["pitch"], dt, gy)
-        roll_output = self.PIDs["roll"].Update(errors["roll"], dt, gx)
-        yaw_output = self.PIDs["yawRate"].Update(errors["yawRate"], dt, gz)
+        safedt = min(dt, 0.1)  # Prevent large dt values
+        pitch_output = self.PIDs["pitch"].Update(errors["pitch"], safedt, gy)
+        roll_output = self.PIDs["roll"].Update(errors["roll"], safedt, gx)
+        yaw_output = self.PIDs["yawRate"].Update(errors["yawRate"], safedt, gz)
 
         # --- Motor Mixing (X quad) ---
         self.motorCommand = {
