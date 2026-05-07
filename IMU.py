@@ -2,6 +2,7 @@ import time
 import json
 import numpy as np
 from mpu6050 import mpu6050
+from ahrs.filters import Mahony
 
 
 class IMU:
@@ -30,6 +31,13 @@ class IMU:
         self.accel_cutoff = .05
         self.gyro_cutoff = 5
 
+        # Mahony Fliter
+        self.q = np.array([1.0, 0.0, 0.0, 0.0])
+        self.ahrs = Mahony(
+            k_P=1.0,
+            k_I=0.3
+        )
+
         # Complementary filter state
         self.angle = np.zeros(3)
         self.last_time = time.time()
@@ -53,6 +61,25 @@ class IMU:
 
     def LowPass(self, new, old):
         return self.alpha_lp * new + (1 - self.alpha_lp) * old
+
+    def QuaternionToEuler(self, q):
+        w, x, y, z = q
+
+        roll = np.arctan2(
+            2*(w*x + y*z),
+            1 - 2*(x*x + y*y)
+        )
+
+        pitch = np.arcsin(
+            2*(w*y - z*x)
+        )
+
+        yaw = np.arctan2(
+            2*(w*z + x*y),
+            1 - 2*(y*y + z*z)
+        )
+
+        return np.degrees([roll, pitch, yaw])
 
     def SetSensorRanges(self, accel_range=2, gyro_range=250):
         accel_scales = {
@@ -311,6 +338,29 @@ class IMU:
         self.angle[1] = alpha * self.angle[1] + (1 - alpha) * accel_angle_y
 
         return self.angle
+
+    def UpdateOrientationMahony(self):
+        accel, gyro, temp = self.GetCalibratedData()
+
+        gx, gy, gz = np.radians(gyro)
+        ax, ay, az = accel
+
+        now = time.time()
+        dt = now - self.last_time
+        self.last_time = now
+
+        dt = min(dt, 0.02)
+
+        # Update Mahony timestep
+        self.ahrs.Dt = dt
+
+        self.q = self.ahrs.updateIMU(
+            self.q,
+            gyr=np.array([gx, gy, gz]),
+            acc=np.array([ax, ay, az])
+        )
+
+        return self.QuaternionToEuler(self.q)
 
     # ---------------------------
     # SAVE / LOAD

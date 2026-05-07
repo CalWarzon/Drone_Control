@@ -6,23 +6,24 @@ import Flight_Controller as FC
 import time as t
 
 
-def OneTimeIMUCalibration(imu, saveFile, tempPoints = 4, rotMatrix = None):
+def OneTimeIMUCalibration(imu, saveFile, tempPoints = 4, rotMatrix = none):
+    # Multi-point Tempature Calibration
+    imu.CalibrateTemperatureMulti(tempPoints)
+
     # Standard IMU Calibration
     imu.CalibrateStandard()
 
     # IMU Scale Calibration
     imu.CalibrateScale()
 
-    # IMU Temperature Calibration
-    imu.CalibrateTemperature(tempPoints)
-
-    # Apply Rotation Matrix if provided
-    if rotMatrix is not None:
+    # Add Rotation Matrix if Supplyed
+    if rotMatrix != none:
         imu.SetRotationMatrix(rotMatrix)
 
     # Save Calibration Data
     imu.SaveCalibration(saveFile)
-    print("IMU Calibration Completed and Saved to", saveFile)
+    print("IMU Calibration Done and Saved to", saveFile)
+
 
 def FlightControlLoop(fc, xbox, baseThrust = .3, rate = 100):
     loopTime = 1/rate
@@ -48,3 +49,4 @@ def FlightControlLoop(fc, xbox, baseThrust = .3, rate = 100):
 
         # Sleep to maintain loop rate
         t.sleep(max(0, loopTime - (t.time() - lastTime)))
+
