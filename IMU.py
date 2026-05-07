@@ -25,6 +25,11 @@ class IMU:
         self.filtered_gyro = np.zeros(3)
         self.alpha_lp = 0.35  # low-pass filter strength
 
+        # Online Drift Correction
+        self.alpha_ODC = .001
+        self.accel_cutoff = .05
+        self.gyro_cutoff = 5
+
         # Complementary filter state
         self.angle = np.zeros(3)
         self.last_time = time.time()
@@ -272,10 +277,10 @@ class IMU:
         self.filtered_gyro = self.LowPass(gyro, self.filtered_gyro)
 
         # Online drift correction (if stable)
-        if abs(np.linalg.norm(self.filtered_accel) - 1.0) < 0.05:
+        if abs(np.linalg.norm(self.filtered_accel - np.array([0,0,1.0]))) < self.accel_cutoff and np.linalg.norm(self.filtered_gyro) < self.gyro_cutoff:
             self.calibration["gyro_bias"] = (
-                0.999 * self.calibration["gyro_bias"] +
-                0.001 * rawGyro
+                (1-self.alpha_ODC) * self.calibration["gyro_bias"] +
+                self.alpha_ODC * rawGyro
             )
 
         return self.filtered_accel, self.filtered_gyro, temp
