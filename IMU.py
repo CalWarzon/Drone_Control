@@ -232,10 +232,13 @@ class IMU:
                 temps.append(t)
 
                 time.sleep(0.01)
+            
+            accel_mean = np.mean(accel, axis=0)
+            accel_bias = accel_mean - np.array([0, 0, self.accel_lsb])
 
             self.calibration["temp_points"].append({
                 "temp": float(np.mean(temps)),
-                "accel_bias": np.mean(accel, axis=0),
+                "accel_bias": accel_bias,
                 "gyro_bias": np.mean(gyro, axis=0)
         })
 
