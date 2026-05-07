@@ -273,19 +273,20 @@ class IMU:
 
         accel = np.array([ax, ay, az], dtype=float)
         gyro = np.array([gx, gy, gz], dtype=float)
-        rawGyro = gyro
+        rawGyro = gyro.copy()
 
-        # Temperature polynomial compensation (gyro)
+        # Temperature polynomial compensation (gyro) or standard Bias if not supplyed
         if self.calibration["temp_poly_coeffs_gyro"] is not None:
             for i in range(3):
                 gyro[i] -= np.polyval(self.calibration["temp_poly_coeffs_gyro"][i], temp)
+        else:
+            gyro  = gyro  - self.calibration["gyro_bias"]
+
         if self.calibration["temp_poly_coeffs_accel"] is not None:
             for i in range(3):
                 accel[i] -= np.polyval(self.calibration["temp_poly_coeffs_accel"][i], temp)
-
-        # Bias
-        accel = accel - self.calibration["accel_bias"]
-        gyro  = gyro  - self.calibration["gyro_bias"]
+        else: 
+            accel = accel - self.calibration["accel_bias"]
 
         #Calibrated Scale
         accel *= self.calibration["accel_scale"]
