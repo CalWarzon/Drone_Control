@@ -1,9 +1,10 @@
-import IMU
-import ESC_Control as ESC
-import PID
-import Xbox_Controller as Xbox
-import Flight_Controller as FC
+from IMU import IMU
+from ESC_Control import ESC_Brushless as ESC
+from PID import PID
+from Xbox_Controller import XboxController as Xbox
+from Flight_Controller import Flight_Controller as FC
 import time as t
+import sys
 
 
 def OneTimeIMUCalibration(imu, saveFile, tempPoints = 4, rotMatrix = none):
@@ -49,4 +50,56 @@ def FlightControlLoop(fc, xbox, baseThrust = .3, rate = 100):
 
         # Sleep to maintain loop rate
         t.sleep(max(0, loopTime - (t.time() - lastTime)))
+
+
+def LiveDisplay(data_function, hz=10):
+    """
+    Continuously updates terminal output.
+
+    Parameters:
+        data_function : function
+            Function returning either:
+                - string
+                - dict
+                - list/tuple
+                - any printable object
+
+        hz : float
+            Update rate in Hertz
+    """
+
+    delay = 1.0 / hz
+
+    try:
+        while True:
+            start = t.time()
+
+            data = data_function()
+
+            # Move cursor to top-left and clear screen
+            sys.stdout.write("\033[H\033[J")
+
+            # Pretty printing
+            if isinstance(data, dict):
+                for k, v in data.items():
+                    print(f"{k}: {v}")
+
+            elif isinstance(data, (list, tuple)):
+                for item in data:
+                    print(item)
+
+            else:
+                print(data)
+
+            sys.stdout.flush()
+
+            # Maintain update rate
+            elapsed = t.time() - start
+            sleep_time = delay - elapsed
+
+            if sleep_time > 0:
+                t.sleep(sleep_time)
+
+    except KeyboardInterrupt:
+        print("\nStopped.")
 

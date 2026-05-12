@@ -1,4 +1,4 @@
-class Flight_Control():
+class Flight_Controller():
     def __init__(self,
         pitchPID, 
         rollPID, 
