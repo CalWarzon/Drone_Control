@@ -27,31 +27,50 @@ def OneTimeIMUCalibration(imu, saveFile, tempPoints = 4, rotMatrix = None):
     print("IMU Calibration Done and Saved to", saveFile)
 
 
-def FlightControlLoop(fc, xbox, baseThrust = .3, rate = 100):
+def FlightControlLoop(fc, xbox, baseThrust = .3, throttleRange = .25, rate = 100, inputSkips = 1):
     loopTime = 1/rate
     lastTime = t.time()
-
+    motorWait = 0
+    inputWait = 0
     # Main Control Loop
     while True:
+        #Runs input code every n timesteps
+        if inputWait == 0:
+            inputWait = inputSkips
 
-        #Read Xbox Controller Input
-        input = xbox.Read()
+            #Read Xbox Controller Input
+            input = xbox.Read()
 
-        #Convert Xbox Input to Flight Controller Commands
-        throttle = input['ly']  # Left stick vertical for throttle
-        throttle = baseThrust + (1-baseThrust)*throttle  # Scale to [baseThrust, 1]
-        target_pitch = input['ry']  # Right stick vertical for pitch
-        target_roll = input['rx']  # Right stick horizontal for roll
-        target_yaw_rate = input['lx']  # Left stick horizontal for yaw rate
+            #Safety Shutoff
+            if input is None:
+                fc.SetMotors({
+                    "FR":0,
+                    "FL":0,
+                    "BR":0,
+                    "BL":0
+                })
+                continue
+
+            #Convert Xbox Input to Flight Controller Commands
+            throttle = input['ly']  # Left stick vertical for throttle
+            throttle = baseThrust + throttleRange*throttle  # Scale to a range centered around base thrust
+            target_pitch = input['ry']  # Right stick vertical for pitch
+            target_roll = input['rx']  # Right stick horizontal for roll
+            target_yaw_rate = input['lx']  # Left stick horizontal for yaw rate
 
         # Update Flight Controller with new input
-        dt = t.time() - lastTime
-        lastTime = t.time()
+        now = t.perf_counter()
+        dt = now - dtLastTime
+        dtLastTime = now
         motorCommands = fc.LoopStep(throttle, target_pitch, target_roll, target_yaw_rate, dt)
         fc.SetMotors(motorCommands)
 
+        #Step Skips
+        inputWait -= 1
+    
         # Sleep to maintain loop rate
-        t.sleep(max(0, loopTime - (t.time() - lastTime)))
+        t.sleep(max(0, loopTime - (t.perf_counter()-sleepLastTime)))
+        sleepLastTime = t.perf_counter()
 
 
 def LiveDisplay(data_function, hz=10):
@@ -138,7 +157,7 @@ num = 2
 current = t.time()
 
 while True:
-    num = PID.update(num, t.time()-current)
+    num = pid.Update(num, t.time()-current)
     current = t.time()
     LiveDisplayStep(num)
-    num += .2 + r.randrange(-1,1,.05)
+    num += .2 + r.uniform(-1,1)

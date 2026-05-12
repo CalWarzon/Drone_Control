@@ -61,7 +61,8 @@ class ESC_Brushless():
 
     def SetSpeed(self, speed):
         speed = max(0, min(1, speed))
-        pwm = self.minp + speed * (self.maxp-self.minp)
+        pwm = self.minp + speed * (self.maxp - self.minp)
+        self.pi.set_servo_pulsewidth(self.pin, pwm)
         
     def SweepPWM(self, start_pwm, end_pwm, step, time_per_speed):
     

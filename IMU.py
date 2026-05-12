@@ -70,9 +70,9 @@ class IMU:
             1 - 2*(x*x + y*y)
         )
 
-        pitch = np.arcsin(
-            2*(w*y - z*x)
-        )
+        val = 2*(w*y - z*x)
+        val = np.clip(val, -1.0, 1.0)
+        pitch = np.arcsin(val)
 
         yaw = np.arctan2(
             2*(w*z + x*y),

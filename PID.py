@@ -67,6 +67,8 @@ class PID:
         # ---------------------------
         # DERIVATIVE
         # ---------------------------
+        dt = max(dt, 0.001)
+
         if self.use_gyro_derivative and gyro_rate is not None:
             # Preferred for drones
             d_raw = -gyro_rate
