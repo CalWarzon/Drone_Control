@@ -48,13 +48,20 @@ class XboxController:
     # NORMALIZATION
     # ---------------------------
     def NormalizeStick(self, value):
-        return max(-1.0, min(1.0, value / 32768.0))
+        if value >= 0:
+            return value / 32767.0
+        return value / 32768.0
 
     def NormalizeTrigger(self, value):
         return value / 255.0
 
-    def Deadzone(self, value, dz=0.05):
-        return 0.0 if abs(value) < dz else value
+    def Deadzone(self, value, dz=0.12):
+        if abs(value) < dz:
+            return 0.0
+        return (value - dz * (1 if value > 0 else -1)) / (1 - dz)
+
+    def Smooth(self, old, new, alpha=0.25):
+        return old + alpha * (new - old)
 
     # ---------------------------
     # READ INPUT (NON-BLOCKING)
@@ -64,9 +71,15 @@ class XboxController:
             r, _, _ = select.select([self.device.fd], [], [], 0)
 
             if r:
-                for event in self.device.read():
+                while True:
+                    event = self.device.read_one()
+
+                    if event is None:
+                        break
+
                     if event.type == ecodes.EV_ABS:
                         self.HandleAbs(event)
+
                     elif event.type == ecodes.EV_KEY:
                         self.HandleKey(event)
 
@@ -84,16 +97,16 @@ class XboxController:
         val = event.value
 
         if code == ecodes.ABS_X:
-            self.state["lx"] = self.Deadzone(self.NormalizeStick(val))
+            self.state["lx"] = self.Smooth(self.state["lx"], self.Deadzone(self.NormalizeStick(val)))
 
         elif code == ecodes.ABS_Y:
-            self.state["ly"] = self.Deadzone(-self.NormalizeStick(val))
+            self.state["ly"] = self.Smooth(self.state["ly"], self.Deadzone(-self.NormalizeStick(val)))
 
         elif code == ecodes.ABS_RX:
-            self.state["rx"] = self.Deadzone(self.NormalizeStick(val))
+            self.state["rx"] = self.Smooth(self.state["rx"], self.Deadzone(self.NormalizeStick(val)))
 
         elif code == ecodes.ABS_RY:
-            self.state["ry"] = self.Deadzone(-self.NormalizeStick(val))
+            self.state["ry"] = self.Smooth(self.state["ry"], self.Deadzone(-self.NormalizeStick(val)))
 
         elif code == ecodes.ABS_Z:   # LT
             self.state["lt"] = self.NormalizeTrigger(val)

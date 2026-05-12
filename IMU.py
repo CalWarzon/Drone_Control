@@ -395,7 +395,7 @@ class IMU:
         return obj
 
     def SaveCalibration(self, filename="imu_cal.json"):
-        data = _to_serializable(self.calibration)
+        data = self._to_serializable(self.calibration)
 
         data["accel_range"] = self.accel_range
         data["gyro_range"] = self.gyro_range
@@ -410,7 +410,7 @@ class IMU:
         with open(filename, "r") as f:
             data = json.load(f)
 
-        self.calibration = _from_serializable(data)
+        self.calibration = self._from_serializable(data)
 
         # Restore ranges safely
         accel_range = self.calibration["accel_range"]
