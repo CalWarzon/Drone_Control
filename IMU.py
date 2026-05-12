@@ -369,18 +369,18 @@ class IMU:
     # ---------------------------
     # SAVE / LOAD
     # ---------------------------
-    def _to_serializable(obj):
+    def _to_serializable(self, obj):
         if isinstance(obj, np.ndarray):
             return obj.tolist()
         elif isinstance(obj, dict):
-            return {k: _to_serializable(v) for k, v in obj.items()}
+            return {k: self._to_serializable(v) for k, v in obj.items()}
         elif isinstance(obj, list):
-            return [_to_serializable(v) for v in obj]
+            return [self._to_serializable(v) for v in obj]
         else:
             return obj
 
 
-    def _from_serializable(obj):
+    def _from_serializable(self, obj):
         if isinstance(obj, list):
             try:
                 arr = np.array(obj)
@@ -388,10 +388,10 @@ class IMU:
                     return arr
             except:
                 pass
-            return [_from_serializable(v) for v in obj]
+            return [self._from_serializable(v) for v in obj]
 
         elif isinstance(obj, dict):
-            return {k: _from_serializable(v) for k, v in obj.items()}
+            return {k: self._from_serializable(v) for k, v in obj.items()}
         return obj
 
     def SaveCalibration(self, filename="imu_cal.json"):

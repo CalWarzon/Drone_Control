@@ -3,11 +3,12 @@ from ESC_Control import ESC_Brushless as ESC
 from PID import PID
 from Xbox_Controller import XboxController as Xbox
 from Flight_Controller import Flight_Controller as FC
+import random as r
 import time as t
 import sys
 
 
-def OneTimeIMUCalibration(imu, saveFile, tempPoints = 4, rotMatrix = none):
+def OneTimeIMUCalibration(imu, saveFile, tempPoints = 4, rotMatrix = None):
     # Multi-point Tempature Calibration
     imu.CalibrateTemperatureMulti(tempPoints)
 
@@ -18,7 +19,7 @@ def OneTimeIMUCalibration(imu, saveFile, tempPoints = 4, rotMatrix = none):
     imu.CalibrateScale()
 
     # Add Rotation Matrix if Supplyed
-    if rotMatrix != none:
+    if rotMatrix != None:
         imu.SetRotationMatrix(rotMatrix)
 
     # Save Calibration Data
@@ -46,7 +47,8 @@ def FlightControlLoop(fc, xbox, baseThrust = .3, rate = 100):
         # Update Flight Controller with new input
         dt = t.time() - lastTime
         lastTime = t.time()
-        fc.LoopStep(throttle, target_pitch, target_roll, target_yaw_rate, dt)
+        motorCommands = fc.LoopStep(throttle, target_pitch, target_roll, target_yaw_rate, dt)
+        fc.SetMotors(motorCommands)
 
         # Sleep to maintain loop rate
         t.sleep(max(0, loopTime - (t.time() - lastTime)))
@@ -103,3 +105,40 @@ def LiveDisplay(data_function, hz=10):
     except KeyboardInterrupt:
         print("\nStopped.")
 
+def LiveDisplayStep(data):
+    """
+    Parameters:
+        data_function : function
+            Function returning either:
+                - string
+                - dict
+                - list/tuple
+                - any printable object
+
+    """
+    # Move cursor to top-left and clear screen
+    sys.stdout.write("\033[H\033[J")
+
+    # Pretty printing
+    if isinstance(data, dict):
+        for k, v in data.items():
+            print(f"{k}: {v}")
+
+    elif isinstance(data, (list, tuple)):
+        for item in data:
+            print(item)
+
+    else:
+        print(data)
+
+    sys.stdout.flush()
+
+pid = PID(kp = .5, ki = .08, kd = .2)
+num = 2
+current = t.time()
+
+while True:
+    num = PID.update(num, t.time()-current)
+    current = t.time()
+    LiveDisplayStep(num)
+    num += .2 + r.randrange(-1,1,.05)

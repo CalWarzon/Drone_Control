@@ -18,14 +18,14 @@ class Flight_Controller():
     def LoopStep(self, throttle, target_pitch, target_roll, target_yaw_rate, dt):
 
         # --- Read IMU ---
-        ax, ay, az = imu.read_accel_raw()
-        gx, gy, gz = imu.read_gyro_raw()
-        temp = imu.read_temp_raw()
+        ax, ay, az = self.IMU.read_accel_raw()
+        gx, gy, gz = self.IMU.read_gyro_raw()
+        temp = self.IMU.read_temp_raw()
 
         # --- Save Data ---
         self.throttle
-        imu.apply_calibration(ax, ay, az, gx, gy, gz, temp)
-        roll, pitch, yaw = imu.update_orientation()
+        self.IMU.apply_calibration(ax, ay, az, gx, gy, gz, temp)
+        roll, pitch, yaw = self.IMU.update_orientation()
 
         # --- PID Errors ---
         errors = {"pitch":target_pitch - pitch, "roll":target_roll - roll, "yawRate":target_yaw_rate - gz}
@@ -44,11 +44,13 @@ class Flight_Controller():
         "BL":(throttle - pitch_output + roll_output + yaw_output)*self.motorSpeedCoef
         }
 
-        # --- Send Commands to Motors ---
-        self.SetMotors(self.motorCommand)
+        # --- Return Motor Commands ---
+        return self.motorCommand
 
     def SetMotors(self, command):
 
         for pos, m in self.motors:
             speed = command[pos]
             m.SetSpeed(speed)
+
+        
