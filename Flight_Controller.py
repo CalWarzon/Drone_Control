@@ -18,7 +18,15 @@ class Flight_Controller():
     def LoopStep(self, throttle, target_pitch, target_roll, target_yaw_rate, dt):
 
         # --- Read IMU ---
-        ax, ay, az, gx, gy, gz, temp = self.IMU.GetAllData()
+        data = self.IMU.GetAllData()
+
+        ax = data[0]['x']
+        ay = data[0]['y']
+        az = data[0]['z']
+        gx = data[1]['x'] 
+        gy = data[1]['y']
+        gx = data[1]['z']
+        temp = data[2]
 
         # --- Save Data ---
         self.throttle

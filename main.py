@@ -29,7 +29,8 @@ def OneTimeIMUCalibration(imu, saveFile, tempPoints = 4, rotMatrix = None):
 
 def FlightControlLoop(fc, xbox, baseThrust = .3, throttleRange = .25, rate = 100, inputSkips = 1):
     loopTime = 1/rate
-    lastTime = t.time()
+    sleepLastTime = t.perf_counter()
+    dtLastTime = t.perf_counter()
     motorWait = 0
     inputWait = 0
     # Main Control Loop
@@ -39,10 +40,10 @@ def FlightControlLoop(fc, xbox, baseThrust = .3, throttleRange = .25, rate = 100
             inputWait = inputSkips
 
             #Read Xbox Controller Input
-            input = xbox.Read()
+            controlerInput = xbox.Read()
 
             #Safety Shutoff
-            if input is None:
+            if controlerInput is None:
                 fc.SetMotors({
                     "FR":0,
                     "FL":0,
@@ -52,11 +53,11 @@ def FlightControlLoop(fc, xbox, baseThrust = .3, throttleRange = .25, rate = 100
                 continue
 
             #Convert Xbox Input to Flight Controller Commands
-            throttle = input['ly']  # Left stick vertical for throttle
-            throttle = baseThrust + throttleRange*throttle  # Scale to a range centered around base thrust
-            target_pitch = input['ry']  # Right stick vertical for pitch
-            target_roll = input['rx']  # Right stick horizontal for roll
-            target_yaw_rate = input['lx']  # Left stick horizontal for yaw rate
+            throttle = controlerInput['ly']  # Left stick vertical for throttle
+            throttle = baseThrust + throttleRange * throttle  # Scale to a range centered around base thrust
+            target_pitch = controlerInput['ry']  # Right stick vertical for pitch
+            target_roll = controlerInput['rx']  # Right stick horizontal for roll
+            target_yaw_rate = controlerInput['lx']  # Left stick horizontal for yaw rate
 
         # Update Flight Controller with new input
         now = t.perf_counter()
