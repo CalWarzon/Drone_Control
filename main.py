@@ -69,11 +69,11 @@ def FlightControlLoop(fc, xbox, safety, baseThrust = .3, throttleRange = .25, ra
         safety.UpdateLoop()
 
         if safety.CheckFailsafe((roll, pitch, yaw)):
-            esc.StopAll()
+            fc.KillMotors()
             continue
 
         if not safety.MotorsEnabled():
-            fc.killMotors()
+            fc.KillMotors()
             continue
 
         #Send Motor Commands

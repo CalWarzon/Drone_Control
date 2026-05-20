@@ -25,7 +25,7 @@ class Flight_Controller():
         az = data[0]['z']
         gx = data[1]['x'] 
         gy = data[1]['y']
-        gx = data[1]['z']
+        gz = data[1]['z']
         temp = data[2]
 
         # --- Save Data ---
