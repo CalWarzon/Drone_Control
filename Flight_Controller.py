@@ -7,7 +7,7 @@ class Flight_Controller():
         motorFR,
         motorFL,
         motorBR,
-        motorBL,
+        motorBL, 
         motorSpeedCoef = 1):
 
         self.motorSpeedCoef = motorSpeedCoef
@@ -51,12 +51,16 @@ class Flight_Controller():
         }
 
         # --- Return Motor Commands ---
-        return self.motorCommand
+        return self.motorCommand, roll, pitch, yaw
 
     def SetMotors(self, command):
 
         for pos, m in self.motors.items():
             speed = command[pos]
             m.SetSpeed(speed)
+
+    def KillMotors(self):
+        for m in self.motors:
+            m.Kill()
 
         

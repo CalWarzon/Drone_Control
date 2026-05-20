@@ -3,6 +3,7 @@ from ESC_Control import ESC_Brushless as ESC
 from PID import PID
 from Xbox_Controller import XboxController as Xbox
 from Flight_Controller import Flight_Controller as FC
+from SafetyManager import SafetyManager as Safety
 import random as r
 import time as t
 import sys
@@ -27,7 +28,7 @@ def OneTimeIMUCalibration(imu, saveFile, tempPoints = 4, rotMatrix = None):
     print("IMU Calibration Done and Saved to", saveFile)
 
 
-def FlightControlLoop(fc, xbox, baseThrust = .3, throttleRange = .25, rate = 100, inputSkips = 1):
+def FlightControlLoop(fc, xbox, safety, baseThrust = .3, throttleRange = .25, rate = 100, inputSkips = 1):
     loopTime = 1/rate
     sleepLastTime = t.perf_counter()
     dtLastTime = t.perf_counter()
@@ -44,13 +45,12 @@ def FlightControlLoop(fc, xbox, baseThrust = .3, throttleRange = .25, rate = 100
 
             #Safety Shutoff
             if controlerInput is None:
-                fc.SetMotors({
-                    "FR":0,
-                    "FL":0,
-                    "BR":0,
-                    "BL":0
-                })
+                fc.KillMotors()
                 continue
+            safety.UpdateController()
+
+            #Check Arming
+            safety.UpdateArming(controlerInput)
 
             #Convert Xbox Input to Flight Controller Commands
             throttle = controlerInput['ly']  # Left stick vertical for throttle
@@ -63,7 +63,20 @@ def FlightControlLoop(fc, xbox, baseThrust = .3, throttleRange = .25, rate = 100
         now = t.perf_counter()
         dt = now - dtLastTime
         dtLastTime = now
-        motorCommands = fc.LoopStep(throttle, target_pitch, target_roll, target_yaw_rate, dt)
+        motorCommands, roll, pitch, yaw = fc.LoopStep(throttle, target_pitch, target_roll, target_yaw_rate, dt)
+        
+        #Safety Checks
+        safety.UpdateLoop()
+
+        if safety.CheckFailsafe((roll, pitch, yaw)):
+            esc.StopAll()
+            continue
+
+        if not safety.MotorsEnabled():
+            fc.killMotors()
+            continue
+
+        #Send Motor Commands
         fc.SetMotors(motorCommands)
 
         #Step Skips
