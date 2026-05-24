@@ -51,7 +51,7 @@ class IMU:
         self.gyro_regs = 0x00
 
         #Create MPU-6050 Connection
-        self.IMUInput = mpu6050(connection)
+        self.IMUInput = mpu6050.mpu6050(connection)
 
     # ---------------------------
     # BASIC UTILITIES

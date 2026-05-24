@@ -1,8 +1,8 @@
-#from IMU import IMU
-#from ESC_Control import ESC_Brushless as ESC
+from IMU import IMU
+from ESC_Control import ESC_Brushless as ESC
 from PID import PID
-#from Xbox_Controller import XboxController as Xbox
-#from Flight_Controller import Flight_Controller as FC
+from Xbox_Controller import XboxController as Xbox
+from Flight_Controller import Flight_Controller as FC
 from SafetyManager import SafetyManager as Safety
 import random as r
 import time as t
@@ -166,16 +166,5 @@ def LiveDisplayStep(data):
 
     sys.stdout.flush()
 
-pid = PID(kp = .8, ki = .3, kd = .6, output_limit=2)
-num = 2
-rate = 0
-current = t.time()
-t.sleep(.2)
-
-while True:
-    rate = pid.Update(num, t.time()-current)
-    num -= rate * (t.time()-current)
-    current = t.time()
-    LiveDisplayStep(num)
-    num += .05 + r.uniform(-.05,.05)
-    t.sleep(.2)
+imu = IMU()
+LiveDisplay(imu.GetAllData)

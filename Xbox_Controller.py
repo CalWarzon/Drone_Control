@@ -49,11 +49,11 @@ class XboxController:
     # ---------------------------
     def NormalizeStick(self, value):
         if value >= 0:
-            return value / 32767.0
-        return value / 32768.0
+            return value / 32767.0 - 1
+        return value / 32768.0 - 1
 
     def NormalizeTrigger(self, value):
-        return value / 255.0
+        return value / 1023.0
 
     def Deadzone(self, value, dz=0.12):
         if abs(value) < dz:
@@ -97,21 +97,21 @@ class XboxController:
         val = event.value
 
         if code == ecodes.ABS_X:
-            self.state["lx"] = self.Smooth(self.state["lx"], self.Deadzone(self.NormalizeStick(val)))
+            self.state["lx"] = self.Deadzone(self.NormalizeStick(val))
 
         elif code == ecodes.ABS_Y:
-            self.state["ly"] = self.Smooth(self.state["ly"], self.Deadzone(-self.NormalizeStick(val)))
+            self.state["ly"] = self.Deadzone(-self.NormalizeStick(val))
 
-        elif code == ecodes.ABS_RX:
-            self.state["rx"] = self.Smooth(self.state["rx"], self.Deadzone(self.NormalizeStick(val)))
+        elif code == ecodes.ABS_Z:
+            self.state["rx"] = self.Deadzone(self.NormalizeStick(val))
 
-        elif code == ecodes.ABS_RY:
-            self.state["ry"] = self.Smooth(self.state["ry"], self.Deadzone(-self.NormalizeStick(val)))
+        elif code == ecodes.ABS_RZ:
+            self.state["ry"] = self.Deadzone(-self.NormalizeStick(val))
 
-        elif code == ecodes.ABS_Z:   # LT
+        elif code == ecodes.ABS_BRAKE:   # LT
             self.state["lt"] = self.NormalizeTrigger(val)
 
-        elif code == ecodes.ABS_RZ:  # RT
+        elif code == ecodes.ABS_GAS:  # RT
             self.state["rt"] = self.NormalizeTrigger(val)
 
         elif code == ecodes.ABS_HAT0X:
@@ -130,8 +130,8 @@ class XboxController:
         mapping = {
             ecodes.BTN_SOUTH: "a",
             ecodes.BTN_EAST: "b",
-            ecodes.BTN_WEST: "x",
-            ecodes.BTN_NORTH: "y",
+            ecodes.BTN_WEST: "y",
+            ecodes.BTN_NORTH: "x",
 
             ecodes.BTN_TL: "lb",
             ecodes.BTN_TR: "rb",
