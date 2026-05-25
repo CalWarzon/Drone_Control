@@ -12,12 +12,15 @@ import numpy as np
 
 def OneTimeIMUCalibration(imu, saveFile, tempPoints = 4, rotMatrix = None):
     # Multi-point Tempature Calibration
+    input("Press Enter to Start Multi-Point Temp Calibration")
     imu.CalibrateTemperatureMulti(tempPoints)
 
     # Standard IMU Calibration
+    input("Press Enter to Start Bias Calibration")
     imu.CalibrateStandard()
 
     # IMU Scale Calibration
+    input("Press Enter to Start Scale Calibration")
     imu.CalibrateScale()
 
     # Add Rotation Matrix if Supplyed
@@ -26,7 +29,6 @@ def OneTimeIMUCalibration(imu, saveFile, tempPoints = 4, rotMatrix = None):
 
     # Save Calibration Data
     imu.SaveCalibration(saveFile)
-    print("IMU Calibration Done and Saved to", saveFile)
 
 
 def FlightControlLoop(fc, xbox, safety, baseThrust = .3, throttleRange = .25, rate = 100, inputSkips = 1):
@@ -167,17 +169,20 @@ def LiveDisplayStep(data):
 
     sys.stdout.flush()
 
+#IMU Read Speed: .00147s
+    
+    
 imu = IMU()
 imu.LoadCalibration("IMU_cal_v1")
-#print(imu.calibration)
+#OneTimeIMUCalibration(imu, "IMU_cal_v1", 5)
 #imu.CalibrateStandard()
 #imu.CalibrateScale()
 #imu.SaveCalibration("IMU_cal_v1")
-i = 20
-rate = 100
-rest = 1/rate
-speed = []
-for i in range (1000):
+
+i = 50
+rate = 400
+rest = 1/rate 
+while True:
     lastT = t.perf_counter()
     ax, ay, az, gx, gy, gz, temp = imu.GetAllData()
     accel,gyro,temp = imu.ApplyCalibration(
@@ -190,11 +195,10 @@ for i in range (1000):
         raw_temp = temp
                )
     pitch, roll, yaw = imu.UpdateOrientation()
-    #if i == 0:
-        #LiveDisplayStep((pitch, roll, yaw, speed))
-        #i = 20
-    #i-=1
+    if i == 0:
+        LiveDisplayStep((pitch, roll, yaw, dt<rest))
+        i = 20
+    i-=1
     dt = (t.perf_counter()-lastT)
-    speed.append(dt)
     t.sleep(max(0,rest-dt))
-print(sum(speed)/len(speed))
+#print(sum(speed)/len(speed))

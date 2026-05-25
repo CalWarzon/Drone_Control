@@ -1,6 +1,7 @@
-import time
+import time as t
 import json
 import numpy as np
+import sys
 from smbus2 import SMBus
 from ahrs.filters import Mahony
 
@@ -9,6 +10,7 @@ class IMU:
     #accel: g
     #gyro: deg/sec
     #Orientation: deg
+    #Tempature: C
 
     MPU_ADDR = 0x68
 
@@ -30,7 +32,9 @@ class IMU:
             "temp_points": [],  # multi-point temp calibration
             "temp_poly_coeffs_gyro": None,
             "temp_poly_coeffs_accel": None,
-            "rotation_matrix": np.eye(3)
+            "rotation_matrix": np.eye(3),
+            "use_temp_gyro": True,
+            "use_temp_accel":False
         }
 
         # Filtering / state
@@ -52,7 +56,7 @@ class IMU:
 
         # Complementary filter state
         self.angle = np.zeros(3)
-        self.last_time = time.time()
+        self.last_time = t.time()
 
         #Scaleing
         self.accel_range = 2      # g
@@ -71,7 +75,7 @@ class IMU:
             0x00
         )
 
-        time.sleep(0.1)
+        t.sleep(0.1)
 
         # Sample rate divider
         # 1000Hz / (1 + 0) = 1000Hz
@@ -200,12 +204,12 @@ class IMU:
         print(
             f"Accel: ±{accel_range}g ({self.accel_lsb} LSB/g), "
             f"Gyro: ±{gyro_range}°/s ({self.gyro_lsb} LSB/deg/s)"
+            )
 
     #----------------------------
     # RAW MPU-6050 CONNECTION
     #----------------------------
     def GetAllData(self):
-        def read_raw(self):
 
         # SINGLE burst read
         data = self.bus.read_i2c_block_data(
@@ -231,7 +235,7 @@ class IMU:
     # ---------------------------
     def CalibrateStandard(self, samples=500):
         print("Keep IMU flat and still...")
-        time.sleep(2)
+        t.sleep(2)
 
         accel = []
         gyro = []
@@ -240,7 +244,7 @@ class IMU:
             ax, ay, az, gx, gy, gz, _ = self.GetAllData()
             accel.append([ax, ay, az])
             gyro.append([gx, gy, gz])
-            time.sleep(0.005)
+            t.sleep(0.005)
 
         accel = np.array(accel)
         gyro = np.array(gyro)
@@ -282,7 +286,29 @@ class IMU:
         self.calibration["temp_points"] = []
 
         for i in range(points):
-            input(f"Stabilize at temp point {i+1}, press ENTER")
+            try:
+                while True:
+                    start = t.time()
+                
+                    _,_,_,_,_,_,temp = self.GetAllData()
+                    temp = self.ConvertTemp(temp)
+
+                    # Move cursor to top-left and clear screen
+                    sys.stdout.write("\033[H\033[J")
+                    print(f"Temp: {temp:.2f} C, press ctrl + C to calibrate.")
+
+                    sys.stdout.flush()
+
+                    # Maintain update rate
+                    elapsed = t.time() - start
+                    sleep_time = .1 - elapsed
+
+                    if sleep_time > 0:
+                        t.sleep(sleep_time)
+
+            except KeyboardInterrupt:
+                print(f"Stabilized at temp point {i+1}, Collecting Data")
+            
 
             accel = []
             gyro = []
@@ -296,7 +322,7 @@ class IMU:
                 gyro.append([gx, gy, gz])
                 temps.append(temp)
 
-                time.sleep(0.01)
+                t.sleep(0.01)
             
             accel_mean = np.mean(accel, axis=0)
             accel_bias = accel_mean - np.array([0, 0, self.accel_lsb])
@@ -344,13 +370,13 @@ class IMU:
         rawGyro = gyro.copy()
 
         # Temperature polynomial compensation (gyro) or standard Bias if not supplyed
-        if self.calibration["temp_poly_coeffs_gyro"] is not None:
+        if self.calibration["temp_poly_coeffs_gyro"] is not None and self.calibration["use_temp_gyro"]:
             for i in range(3):
                 gyro[i] -= np.polyval(self.calibration["temp_poly_coeffs_gyro"][i], temp)
         else:
             gyro  = gyro  - self.calibration["gyro_bias"]
 
-        if self.calibration["temp_poly_coeffs_accel"] is not None:
+        if self.calibration["temp_poly_coeffs_accel"] is not None and self.calibration["use_temp_accel"]:
             for i in range(3):
                 accel[i] -= np.polyval(self.calibration["temp_poly_coeffs_accel"][i], temp)
         else: 
@@ -385,7 +411,7 @@ class IMU:
     # COMPLEMENTARY FILTER
     # ---------------------------
     def UpdateOrientation(self):
-        now = time.time()
+        now = t.time()
         dt = now - self.last_time
         self.last_time = now
 
