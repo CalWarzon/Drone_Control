@@ -179,15 +179,15 @@ rest = 1/rate
 speed = []
 for i in range (1000):
     lastT = t.perf_counter()
-    data = imu.GetAllData()
+    ax, ay, az, gx, gy, gz, temp = imu.GetAllData()
     accel,gyro,temp = imu.ApplyCalibration(
-        ax = data[0]['x'],
-        ay = data[0]['y'],
-        az = data[0]['z'],
-        gx = data[1]['x'],
-        gy = data[1]['y'],
-        gz = data[1]['z'],
-        raw_temp = data[2]
+        ax = ax,
+        ay = ay,
+        az = az,
+        gx = gx,
+        gy = gy,
+        gz = gz,
+        raw_temp = temp
                )
     pitch, roll, yaw = imu.UpdateOrientation()
     #if i == 0:

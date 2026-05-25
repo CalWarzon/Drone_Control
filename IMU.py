@@ -1,7 +1,7 @@
 import time
 import json
 import numpy as np
-from mpu6050 import mpu6050
+from smbus2 import SMBus
 from ahrs.filters import Mahony
 
 
@@ -9,7 +9,19 @@ class IMU:
     #accel: g
     #gyro: deg/sec
     #Orientation: deg
-    def __init__(self, connection = 0x68):
+
+    MPU_ADDR = 0x68
+
+    # Registers
+    PWR_MGMT_1 = 0x6B
+    SMPLRT_DIV = 0x19
+    CONFIG = 0x1A
+    GYRO_CONFIG = 0x1B
+    ACCEL_CONFIG = 0x1C
+
+    ACCEL_XOUT_H = 0x3B
+
+    def __init__(self, bus_num = 1):
         self.calibration = {
             "accel_bias": np.zeros(3),
             "gyro_bias": np.zeros(3),
@@ -45,16 +57,64 @@ class IMU:
         #Scaleing
         self.accel_range = 2      # g
         self.gyro_range = 250     # deg/sec
-        self.accel_lsb = 9.81
+        self.accel_lsb = 16384
+        self.gyro_lsb = 131.
         self.accel_regs = 0x00
         self.gyro_regs = 0x00
 
-        #Create MPU-6050 Connection
-        self.IMUInput = mpu6050.mpu6050(connection)
+        self.bus = SMBus(bus_num)
+
+        # Wake up MPU6050
+        self.bus.write_byte_data(
+            self.MPU_ADDR,
+            self.PWR_MGMT_1,
+            0x00
+        )
+
+        time.sleep(0.1)
+
+        # Sample rate divider
+        # 1000Hz / (1 + 0) = 1000Hz
+        self.bus.write_byte_data(
+            self.MPU_ADDR,
+            self.SMPLRT_DIV,
+            0
+        )
+
+        # DLPF config
+        # 0x03 ≈ 44Hz accel / 42Hz gyro bandwidth
+        self.bus.write_byte_data(
+            self.MPU_ADDR,
+            self.CONFIG,
+            0x03
+        )
+
+        # Gyro 250 deg/s
+        self.bus.write_byte_data(
+            self.MPU_ADDR,
+            self.GYRO_CONFIG,
+            self.gyro_regs
+        )
+
+        # Accel 2g
+        self.bus.write_byte_data(
+            self.MPU_ADDR,
+            self.ACCEL_CONFIG,
+            self.accel_regs
+        )
 
     # ---------------------------
     # BASIC UTILITIES
     # ---------------------------
+    def ReadWord(self, high, low):
+
+        value = (high << 8) | low
+
+        if value >= 0x8000:
+            value -= 65536
+
+        return value
+
     def ConvertTemp(self, raw_temp):
         return (raw_temp / 340.0) + 36.53
 
@@ -82,6 +142,32 @@ class IMU:
 
     def SetSensorRanges(self, accel_range=2, gyro_range=250):
         
+        accel_scales = {
+        2: 16384,
+        4: 8192,
+        8: 4096,
+        16: 2048
+    }
+
+        gyro_scales = {
+        250: 131.0,
+        500: 65.5,
+        1000: 32.8,
+        2000: 16.4
+    }
+
+        if accel_range not in accel_scales:
+            raise ValueError("Invalid accel range")
+
+        if gyro_range not in gyro_scales:
+            raise ValueError("Invalid gyro range")
+
+        self.accel_range = accel_range
+        self.gyro_range = gyro_range
+
+        self.accel_lsb = accel_scales[accel_range]
+        self.gyro_lsb = gyro_scales[gyro_range]
+
         accel_registers = {
         2: 0x00,
         4: 0x08,
@@ -94,56 +180,51 @@ class IMU:
         1000: 0x10,
         2000: 0x18
         }
-        
-        if accel_range not in accel_registers:
-            raise ValueError("Invalid accel range")
 
-        if gyro_range not in gyro_registers:
-            raise ValueError("Invalid gyro range")
-
-        self.accel_range = accel_range
-        self.gyro_range = gyro_range
-        
         self.accel_regs = accel_registers[accel_range]
         self.gyro_regs = gyro_registers[gyro_range]
 
-        self.SetAccelRange(self.accel_regs)
-        self.SetGyroRange(self.gyro_regs)
+        #Send command to IMU
+        self.bus.write_byte_data(
+            self.MPU_ADDR,
+            self.ACCEL_CONFIG,
+            self.accel_regs
+        )   
+
+        self.bus.write_byte_data(
+            self.MPU_ADDR,
+            self.GYRO_CONFIG,
+            self.gyro_regs
+        )
 
         print(
-            f"Accel: ±{accel_range}g, "
-            f"Gyro: ±{gyro_range}°/s"
-        )
+            f"Accel: ±{accel_range}g ({self.accel_lsb} LSB/g), "
+            f"Gyro: ±{gyro_range}°/s ({self.gyro_lsb} LSB/deg/s)"
 
     #----------------------------
     # RAW MPU-6050 CONNECTION
     #----------------------------
     def GetAllData(self):
-        return self.IMUInput.get_all_data()
+        def read_raw(self):
 
-    def GetAccelData(self):
-        return self.IMUInput.get_accel_data()
+        # SINGLE burst read
+        data = self.bus.read_i2c_block_data(
+            self.MPU_ADDR,
+            self.ACCEL_XOUT_H,
+            14
+        )
 
-    def GetGyroData(self):
-        return self.IMUInput.get_gyro_data()
+        ax = self.ReadWord(data[0], data[1])
+        ay = self.ReadWord(data[2], data[3])
+        az = self.ReadWord(data[4], data[5])
 
-    def GetTempData(self):
-        return self.IMUInput.get_temp()
+        temp = self.ReadWord(data[6], data[7])
 
-    def GetRawI2C(self):
-        return self.IMUInput.read_i2c_word()
-    
-    def SetAccelRange(self, range):
-        self.IMUInput.set_accel_range(range)
+        gx = self.ReadWord(data[8], data[9])
+        gy = self.ReadWord(data[10], data[11])
+        gz = self.ReadWord(data[12], data[13])
 
-    def GetAccelRange(self):
-        return self.IMUInput.read_accel_range()
-
-    def SetGyroRange(self, range):
-        self.IMUInput.set_gyro_range(range)
-
-    def GetGyroRange(self):
-        return self.IMUInput.read_gyro_range()
+        return ax, ay, az, gx, gy, gz, temp
 
     # ---------------------------
     # STANDARD + SCALE CALIBRATION
@@ -156,8 +237,9 @@ class IMU:
         gyro = []
 
         for _ in range(samples):
-            accel.append(list(self.GetAccelData().values()))
-            gyro.append(list(self.GetGyroData().values()))
+            ax, ay, az, gx, gy, gz, _ = self.GetAllData()
+            accel.append([ax, ay, az])
+            gyro.append([gx, gy, gz])
             time.sleep(0.005)
 
         accel = np.array(accel)
@@ -179,10 +261,10 @@ class IMU:
         axisName = ('x','y','z')
         for axis in range(3):
             input(f"Place +{axisName[axis]} axis up. Press ENTER")
-            pos = np.mean([list(self.GetAccelData().values()) for _ in range(200)], axis=0)
+            pos = np.mean([self.GetAllData()[:3] for _ in range(200)], axis=0)
 
             input(f"Place -{axisName[axis]} axis up. Press ENTER")
-            neg = np.mean([list(self.GetAccelData().values()) for _ in range(200)], axis=0)
+            neg = np.mean([self.GetAllData()[:3] for _ in range(200)], axis=0)
 
             scale_factor = (2 * self.accel_lsb) / (pos[axis] - neg[axis])
             scale.append(scale_factor)
@@ -207,14 +289,12 @@ class IMU:
             temps = []
 
             for _ in range(200):
-                accel, gyro, t = self.GetAllData()
-                ax, ay, az = accel.values()
-                gx, gy, gz = gyro.values()
-                t = self.ConvertTemp(t)
+                ax, ay, az, gx, gy, gz, temp = self.GetAllData()
+                temp = self.ConvertTemp(temp)
 
                 accel.append([ax, ay, az])
                 gyro.append([gx, gy, gz])
-                temps.append(t)
+                temps.append(temp)
 
                 time.sleep(0.01)
             
@@ -281,6 +361,7 @@ class IMU:
 
         #Scale Values to gs
         accel = accel / self.accel_lsb
+        gyro = gyro/ self.gyro_lsb
 
         # Axis alignment
         R = self.calibration["rotation_matrix"]

@@ -14,24 +14,20 @@ class Flight_Controller():
         self.PIDs = {"pitch":pitchPID, "roll":rollPID, "yawRate":yawPID} 
         self.IMU = IMU
         self.motors = {"FR":motorFR, "FL":motorFL, "BR":motorBR, "BL":motorBL}
-    
-    def LoopStep(self, throttle, target_pitch, target_roll, target_yaw_rate, dt):
 
+    def IMUStep(self):
         # --- Read IMU ---
-        data = self.IMU.GetAllData()
-
-        ax = data[0]['x']
-        ay = data[0]['y']
-        az = data[0]['z']
-        gx = data[1]['x'] 
-        gy = data[1]['y']
-        gz = data[1]['z']
-        temp = data[2]
+        ax, ay, az, gx, gy, gz, temp = self.IMU.GetAllData()
 
         # --- Save Data ---
-        self.throttle
-        self.IMU.ApplyCalibration(ax, ay, az, gx, gy, gz, temp)
+        self.throttle = throttle
+        ax, ay, az, gx, gy, gz, temp = self.IMU.ApplyCalibration(ax, ay, az, gx, gy, gz, temp)
         roll, pitch, yaw = self.IMU.UpdateOrientation()
+        return ax, ay, az, gx, gy, gz, temp, roll, pitch, yaw
+    
+    def LoopStep(self, throttle, target_pitch, target_roll, target_yaw_rate, dt):
+        # --- Update IMU ---
+        ax, ay, az, gx, gy, gz, temp, roll, pitch, yaw = self.IMUStep()
 
         # --- PID Errors ---
         errors = {"pitch":target_pitch - pitch, "roll":target_roll - roll, "yawRate":target_yaw_rate - gz}
