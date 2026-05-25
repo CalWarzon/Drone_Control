@@ -7,6 +7,7 @@ from SafetyManager import SafetyManager as Safety
 import random as r
 import time as t
 import sys
+import numpy as np
 
 
 def OneTimeIMUCalibration(imu, saveFile, tempPoints = 4, rotMatrix = None):
@@ -167,4 +168,33 @@ def LiveDisplayStep(data):
     sys.stdout.flush()
 
 imu = IMU()
-LiveDisplay(imu.GetAllData)
+imu.LoadCalibration("IMU_cal_v1")
+#print(imu.calibration)
+#imu.CalibrateStandard()
+#imu.CalibrateScale()
+#imu.SaveCalibration("IMU_cal_v1")
+i = 20
+rate = 100
+rest = 1/rate
+speed = []
+for i in range (1000):
+    lastT = t.perf_counter()
+    data = imu.GetAllData()
+    accel,gyro,temp = imu.ApplyCalibration(
+        ax = data[0]['x'],
+        ay = data[0]['y'],
+        az = data[0]['z'],
+        gx = data[1]['x'],
+        gy = data[1]['y'],
+        gz = data[1]['z'],
+        raw_temp = data[2]
+               )
+    pitch, roll, yaw = imu.UpdateOrientation()
+    #if i == 0:
+        #LiveDisplayStep((pitch, roll, yaw, speed))
+        #i = 20
+    #i-=1
+    dt = (t.perf_counter()-lastT)
+    speed.append(dt)
+    t.sleep(max(0,rest-dt))
+print(sum(speed)/len(speed))

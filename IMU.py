@@ -45,8 +45,7 @@ class IMU:
         #Scaleing
         self.accel_range = 2      # g
         self.gyro_range = 250     # deg/sec
-        self.accel_lsb = 16384
-        self.gyro_lsb = 131.0
+        self.accel_lsb = 9.81
         self.accel_regs = 0x00
         self.gyro_regs = 0x00
 
@@ -82,32 +81,7 @@ class IMU:
         return np.degrees([roll, pitch, yaw])
 
     def SetSensorRanges(self, accel_range=2, gyro_range=250):
-        accel_scales = {
-        2: 16384,
-        4: 8192,
-        8: 4096,
-        16: 2048
-    }
-
-        gyro_scales = {
-        250: 131.0,
-        500: 65.5,
-        1000: 32.8,
-        2000: 16.4
-    }
-
-        if accel_range not in accel_scales:
-            raise ValueError("Invalid accel range")
-
-        if gyro_range not in gyro_scales:
-            raise ValueError("Invalid gyro range")
-
-        self.accel_range = accel_range
-        self.gyro_range = gyro_range
-
-        self.accel_lsb = accel_scales[accel_range]
-        self.gyro_lsb = gyro_scales[gyro_range]
-
+        
         accel_registers = {
         2: 0x00,
         4: 0x08,
@@ -121,6 +95,15 @@ class IMU:
         2000: 0x18
         }
         
+        if accel_range not in accel_registers:
+            raise ValueError("Invalid accel range")
+
+        if gyro_range not in gyro_registers:
+            raise ValueError("Invalid gyro range")
+
+        self.accel_range = accel_range
+        self.gyro_range = gyro_range
+        
         self.accel_regs = accel_registers[accel_range]
         self.gyro_regs = gyro_registers[gyro_range]
 
@@ -128,8 +111,8 @@ class IMU:
         self.SetGyroRange(self.gyro_regs)
 
         print(
-            f"Accel: ±{accel_range}g ({self.accel_lsb} LSB/g), "
-            f"Gyro: ±{gyro_range}°/s ({self.gyro_lsb} LSB/deg/s)"
+            f"Accel: ±{accel_range}g, "
+            f"Gyro: ±{gyro_range}°/s"
         )
 
     #----------------------------
@@ -173,8 +156,8 @@ class IMU:
         gyro = []
 
         for _ in range(samples):
-            accel.append(self.GetAccelData())
-            gyro.append(self.GetGyroData())
+            accel.append(list(self.GetAccelData().values()))
+            gyro.append(list(self.GetGyroData().values()))
             time.sleep(0.005)
 
         accel = np.array(accel)
@@ -193,13 +176,13 @@ class IMU:
         print("Scale calibration (place each axis ±1g).")
 
         scale = []
-
+        axisName = ('x','y','z')
         for axis in range(3):
-            input(f"Place +{axis} axis up. Press ENTER")
-            pos = np.mean([self.GetAccelData() for _ in range(200)], axis=0)
+            input(f"Place +{axisName[axis]} axis up. Press ENTER")
+            pos = np.mean([list(self.GetAccelData().values()) for _ in range(200)], axis=0)
 
-            input(f"Place -{axis} axis up. Press ENTER")
-            neg = np.mean([self.GetAccelData() for _ in range(200)], axis=0)
+            input(f"Place -{axisName[axis]} axis up. Press ENTER")
+            neg = np.mean([list(self.GetAccelData().values()) for _ in range(200)], axis=0)
 
             scale_factor = (2 * self.accel_lsb) / (pos[axis] - neg[axis])
             scale.append(scale_factor)
@@ -224,7 +207,9 @@ class IMU:
             temps = []
 
             for _ in range(200):
-                ax, ay, az, gx, gy, gz, t = self.GetAllData()
+                accel, gyro, t = self.GetAllData()
+                ax, ay, az = accel.values()
+                gx, gy, gz = gyro.values()
                 t = self.ConvertTemp(t)
 
                 accel.append([ax, ay, az])
@@ -294,9 +279,8 @@ class IMU:
         #Calibrated Scale
         accel *= self.calibration["accel_scale"]
 
-        #Scale Values to gs and deg/s
+        #Scale Values to gs
         accel = accel / self.accel_lsb
-        gyro = gyro / self.gyro_lsb
 
         # Axis alignment
         R = self.calibration["rotation_matrix"]
@@ -335,6 +319,7 @@ class IMU:
         
         self.angle[0] += gx * dt
         self.angle[1] += gy * dt
+        self.angle[2] += gz * dt
 
         # Complementary filter
         alpha = 0.98
