@@ -31,17 +31,17 @@ def OneTimeIMUCalibration(imu, saveFile, tempPoints = 4, rotMatrix = None):
     imu.SaveCalibration(saveFile)
 
 
-def FlightControlLoop(fc, xbox, safety, baseThrust = .3, throttleRange = .25, rate = 100, inputSkips = 1):
+def FlightControlLoop(fc, xbox, safety, baseThrust = .3, throttleRange = .25, rate = 100, inputEvery = 4, motorEvery = 2):
     loopTime = 1/rate
     sleepLastTime = t.perf_counter()
     dtLastTime = t.perf_counter()
-    motorWait = 0
-    inputWait = 0
+    motorWait = motorEvery
+    inputWait = inputEvery
     # Main Control Loop
     while True:
         #Runs input code every n timesteps
-        if inputWait == 0:
-            inputWait = inputSkips
+        if inputWait == 1:
+            inputWait = inputEvery
 
             #Read Xbox Controller Input
             controlerInput = xbox.Read()
@@ -62,28 +62,32 @@ def FlightControlLoop(fc, xbox, safety, baseThrust = .3, throttleRange = .25, ra
             target_roll = controlerInput['rx']  # Right stick horizontal for roll
             target_yaw_rate = controlerInput['lx']  # Left stick horizontal for yaw rate
 
-        # Update Flight Controller with new input
-        now = t.perf_counter()
-        dt = now - dtLastTime
-        dtLastTime = now
-        motorCommands, roll, pitch, yaw = fc.LoopStep(throttle, target_pitch, target_roll, target_yaw_rate, dt)
+        # Update Flight Controller with new input every n timesteps
+        if motorSkips == 1:
+            motorSkips == motorEvery
+            now = t.perf_counter()
+            dt = now - dtLastTime
+            dtLastTime = now
+            motorCommands, roll, pitch, yaw = fc.LoopStep(throttle, target_pitch, target_roll, target_yaw_rate, dt)
         
-        #Safety Checks
-        safety.UpdateLoop()
+            #Safety Checks
+            safety.UpdateLoop()
 
-        if safety.CheckFailsafe((roll, pitch, yaw)):
-            fc.KillMotors()
-            continue
+            if safety.CheckFailsafe((roll, pitch, yaw)):
+                fc.KillMotors()
+                continue
 
-        if not safety.MotorsEnabled():
-            fc.KillMotors()
-            continue
+            if not safety.MotorsEnabled():
+                fc.KillMotors()
+                continue
 
-        #Send Motor Commands
-        fc.SetMotors(motorCommands)
-
+            #Send Motor Commands
+            fc.SetMotors(motorCommands)
+        else:
+            fc.IMUStep()
         #Step Skips
         inputWait -= 1
+        motorWait -= 1
     
         # Sleep to maintain loop rate
         t.sleep(max(0, loopTime - (t.perf_counter()-sleepLastTime)))
