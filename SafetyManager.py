@@ -31,7 +31,7 @@ class SafetyManager:
 
         """
         Arm:
-            LT + RT + START held
+            LT + RT + GUIDE held
 
         Disarm:
             BACK button

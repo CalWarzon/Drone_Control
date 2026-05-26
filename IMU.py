@@ -405,7 +405,7 @@ class IMU:
                 self.alpha_ODC * rawGyro
             )
 
-        return self.filtered_accel, self.filtered_gyro, temp
+        return self.filtered_accel[0], self.filtered_accel[1], self.filtered_accel[2], self.filtered_gyro[0], self.filtered_gyro[1], self.filtered_gyro[2], temp
 
     # ---------------------------
     # COMPLEMENTARY FILTER

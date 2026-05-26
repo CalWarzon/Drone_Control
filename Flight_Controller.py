@@ -23,7 +23,6 @@ class Flight_Controller():
         ax, ay, az, gx, gy, gz, temp = self.IMU.GetAllData()
 
         # --- Save Data ---
-        self.throttle = throttle
         ax, ay, az, gx, gy, gz, temp = self.IMU.ApplyCalibration(ax, ay, az, gx, gy, gz, temp)
         roll, pitch, yaw = self.IMU.UpdateOrientation()
         return ax, ay, az, gx, gy, gz, temp, roll, pitch, yaw
@@ -43,10 +42,10 @@ class Flight_Controller():
 
         # --- Motor Mixing (X quad) ---
         self.motorCommand = {
-        "FR":max(0, min((throttle + pitch_output + roll_output - yaw_output)*self.motorSpeedCoef, self.motorMaxSpeed)),
-        "FL":max(0, min((throttle + pitch_output - roll_output + yaw_output)*self.motorSpeedCoef, self.motorMaxSpeed)),
-        "BR":max(0, min((throttle - pitch_output - roll_output - yaw_output)*self.motorSpeedCoef, self.motorMaxSpeed)),
-        "BL":max(0, min((throttle - pitch_output + roll_output + yaw_output)*self.motorSpeedCoef, self.motorMaxSpeed)),
+        "FR":max(0, min((throttle - pitch_output - roll_output - yaw_output)*self.motorSpeedCoef, self.motorMaxSpeed)),
+        "FL":max(0, min((throttle - pitch_output + roll_output + yaw_output)*self.motorSpeedCoef, self.motorMaxSpeed)),
+        "BR":max(0, min((throttle + pitch_output + roll_output - yaw_output)*self.motorSpeedCoef, self.motorMaxSpeed)),
+        "BL":max(0, min((throttle + pitch_output - roll_output + yaw_output)*self.motorSpeedCoef, self.motorMaxSpeed)),
         }
 
         # --- Return Motor Commands ---
