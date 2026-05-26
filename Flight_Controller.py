@@ -63,12 +63,14 @@ class Flight_Controller():
         if min_motor < 0.0:
             deficit = -min_motor
             motors = [m + deficit for m in motors]
+            
+        motors = [max(0.0, min(1.0, motors[m])) for m in motors]
 
         # --- Slew Limiter ---
         self.motorCommand = [max(prev - self.motorMaxDelta, min(cmd, prev + self.motorMaxDelta)) 
                                 for cmd, prev in zip(self.motorCommand, self.lastMotorCommand)]
         self.lastMotorCommand = self.motorCommand
-        
+
         # --- Return Motor Commands ---
         return self.motorCommand, roll, pitch, yaw
 

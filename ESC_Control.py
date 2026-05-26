@@ -7,6 +7,8 @@ class ESC_Brushless():
         self.pin = pin
         self.maxp = maxPulseWidth
         self.minp = minPulseWidth
+        self.maxpSafe
+        self.minpSafe
         self.pi = pigpio.pi()
         self.pi.set_servo_pulsewidth(self.pin, 0)
 
@@ -63,12 +65,12 @@ class ESC_Brushless():
         self.pi.set_servo_pulsewidth(self.pin, self.minp)
 
     def SetSpeed(self, speed):
-        pwm = self.minp + speed * (self.maxp - self.minp)
+        pwm = self.minpSafe + speed * (self.maxpSafe - self.minpSafe)
         self.pi.set_servo_pulsewidth(self.pin, pwm)
 
     def SetSpeedSafe(self, speed):
         speed = max(0, min(speed, 1))
-        pwm = self.minp + speed * (self.maxp - self.minp)
+        pwm = self.minpSafe + speed * (self.maxpSafe - self.minpSafe)
         self.pi.set_servo_pulsewidth(self.pin, pwm)
         
     def SweepPWM(self, start_pwm, end_pwm, step, time_per_speed):
