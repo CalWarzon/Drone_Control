@@ -82,7 +82,8 @@ def FlightControlLoop(fc, xbox, safety, baseThrust = .3, throttleRange = .25, ra
                 continue
 
             #Send Motor Commands
-            fc.SetMotors(motorCommands)
+            LiveDisplayStep(np.array([[motorCommands['FL'], motorCommands['FR']],[motorCommands['BL'], motorCommands['BR']]]))
+            #fc.SetMotors(motorCommands)
         else:
             fc.IMUStep()
         #Step Skips
@@ -174,35 +175,59 @@ def LiveDisplayStep(data):
     sys.stdout.flush()
 
 #IMU Read Speed: .00147s
-    
+
     
 imu = IMU()
 imu.LoadCalibration("IMU_cal_v1")
-#OneTimeIMUCalibration(imu, "IMU_cal_v1", 5)
-#imu.CalibrateStandard()
-#imu.CalibrateScale()
-#imu.SaveCalibration("IMU_cal_v1")
+controller = Xbox()
+safe = Safety()
+fc = FC(pitchPID = PID(
+            kp = 1.8,
+            ki = .6,
+            kd = .04,
+            integrator_limit=.3,
+            output_limit=.25,
+            integral_fade=0.98,
+            d_filter_alpha=0.3,
+            use_gyro_derivative=True
+        ), 
+        rollPID = PID(
+            kp = 1.8,
+            ki = .6,
+            kd = .04,
+            integrator_limit=.3,
+            output_limit=.25,
+            integral_fade=0.98,
+            d_filter_alpha=0.3,
+            use_gyro_derivative=True
+        ), 
+        yawPID = PID(
+            kp = 1.2,
+            ki = .2,
+            kd = .0,
+            integrator_limit=.3,
+            output_limit=.25,
+            integral_fade=0.98,
+            d_filter_alpha=0.3,
+            use_gyro_derivative=False
+        ), 
+        IMU = imu,
+        motorFR = None,
+        motorFL = None,
+        motorBR = None,
+        motorBL = None,
+        motorSpeedCoef = 1,
+        motorMaxSpeed = .5
+        )
 
-i = 50
-rate = 400
-rest = 1/rate 
-while True:
-    lastT = t.perf_counter()
-    ax, ay, az, gx, gy, gz, temp = imu.GetAllData()
-    accel,gyro,temp = imu.ApplyCalibration(
-        ax = ax,
-        ay = ay,
-        az = az,
-        gx = gx,
-        gy = gy,
-        gz = gz,
-        raw_temp = temp
-               )
-    pitch, roll, yaw = imu.UpdateOrientation()
-    if i == 0:
-        LiveDisplayStep((pitch, roll, yaw, dt<rest))
-        i = 20
-    i-=1
-    dt = (t.perf_counter()-lastT)
-    t.sleep(max(0,rest-dt))
-#print(sum(speed)/len(speed))
+
+FlightControlLoop(
+    fc = fc, 
+    xbox = controller, 
+    safety = safe, 
+    baseThrust = .25, 
+    throttleRange = .25, 
+    rate = 100, 
+    inputEvery = 5, 
+    motorEvery = 10
+)

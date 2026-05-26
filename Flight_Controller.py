@@ -8,8 +8,11 @@ class Flight_Controller():
         motorFL,
         motorBR,
         motorBL, 
-        motorSpeedCoef = 1):
+        motorSpeedCoef = 1,
+        motorMaxSpeed = 1
+        ):
 
+        self.motorMaxSpeed = motorMaxSpeed
         self.motorSpeedCoef = motorSpeedCoef
         self.PIDs = {"pitch":pitchPID, "roll":rollPID, "yawRate":yawPID} 
         self.IMU = IMU
@@ -40,10 +43,10 @@ class Flight_Controller():
 
         # --- Motor Mixing (X quad) ---
         self.motorCommand = {
-        "FR":(throttle + pitch_output + roll_output - yaw_output)*self.motorSpeedCoef,
-        "FL":(throttle + pitch_output - roll_output + yaw_output)*self.motorSpeedCoef,
-        "BR":(throttle - pitch_output - roll_output - yaw_output)*self.motorSpeedCoef,
-        "BL":(throttle - pitch_output + roll_output + yaw_output)*self.motorSpeedCoef
+        "FR":max(0, min((throttle + pitch_output + roll_output - yaw_output)*self.motorSpeedCoef, self.motorMaxSpeed)),
+        "FL":max(0, min((throttle + pitch_output - roll_output + yaw_output)*self.motorSpeedCoef, self.motorMaxSpeed)),
+        "BR":max(0, min((throttle - pitch_output - roll_output - yaw_output)*self.motorSpeedCoef, self.motorMaxSpeed)),
+        "BL":max(0, min((throttle - pitch_output + roll_output + yaw_output)*self.motorSpeedCoef, self.motorMaxSpeed)),
         }
 
         # --- Return Motor Commands ---

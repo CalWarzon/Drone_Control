@@ -63,7 +63,11 @@ class ESC_Brushless():
         self.pi.set_servo_pulsewidth(self.pin, self.minp)
 
     def SetSpeed(self, speed):
-        speed = max(0, min(1, speed))
+        pwm = self.minp + speed * (self.maxp - self.minp)
+        self.pi.set_servo_pulsewidth(self.pin, pwm)
+
+    def SetSpeedSafe(self, speed):
+        speed = max(0, min(speed, 1))
         pwm = self.minp + speed * (self.maxp - self.minp)
         self.pi.set_servo_pulsewidth(self.pin, pwm)
         
