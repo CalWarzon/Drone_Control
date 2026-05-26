@@ -186,7 +186,7 @@ safe = Safety()
 fc = FC(pitchPID = PID(
             kp = 1.8,
             ki = .0,
-            kd = .01,
+            kd = .015,
             integrator_limit=.3,
             output_limit=.6,
             integral_fade=0.97,
@@ -196,7 +196,7 @@ fc = FC(pitchPID = PID(
         rollPID = PID(
             kp = 1.8,
             ki = .0,
-            kd = .01,
+            kd = .015,
             integrator_limit=.3,
             output_limit=.6,
             integral_fade=0.97,
@@ -208,7 +208,7 @@ fc = FC(pitchPID = PID(
             ki = .0,
             kd = .0,
             integrator_limit=.3,
-            output_limit=.6,
+            output_limit=.4,
             integral_fade=0.97,
             d_filter_alpha=0.15,
             use_gyro_derivative=False
@@ -227,7 +227,7 @@ FlightControlLoop(
     fc = fc, 
     xbox = controller, 
     safety = safe, 
-    baseThrust = .5, 
+    baseThrust = .3, 
     throttleRange = .3, 
     rate = 100, 
     inputEvery = 10, 

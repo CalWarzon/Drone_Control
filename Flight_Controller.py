@@ -44,6 +44,9 @@ class Flight_Controller():
         roll_output = self.PIDs["roll"].Update(errors["roll"], safedt, gx)
         yaw_output = self.PIDs["yawRate"].Update(errors["yawRate"], safedt, gz)
 
+        # --- Throttle Clamp ---
+        throttle = max(15, min(85, throttle))
+
         # --- Motor Mixing (X quad) ---
         self.motorCommand = [
         (throttle - pitch_output - roll_output - yaw_output)*self.motorSpeedCoef,
@@ -63,7 +66,7 @@ class Flight_Controller():
         if min_motor < 0.0:
             deficit = -min_motor
             motors = [m + deficit for m in motors]
-            
+
         motors = [max(0.0, min(1.0, motors[m])) for m in motors]
 
         # --- Slew Limiter ---
