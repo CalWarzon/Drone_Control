@@ -45,7 +45,7 @@ class Flight_Controller():
         yaw_output = self.PIDs["yawRate"].Update(errors["yawRate"], safedt, gz)
 
         # --- Throttle Clamp ---
-        throttle = max(15, min(85, throttle))
+        throttle = max(.15, min(.75, throttle))
 
         # --- Motor Mixing (X quad) ---
         self.motorCommand = [
