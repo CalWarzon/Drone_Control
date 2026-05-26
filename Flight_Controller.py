@@ -9,14 +9,18 @@ class Flight_Controller():
         motorBR,
         motorBL, 
         motorSpeedCoef = 1,
-        motorMaxSpeed = 1
+        motorMaxSpeed = 1,
+        motorMaxDelta = .03
         ):
 
         self.motorMaxSpeed = motorMaxSpeed
+        self.motorMaxDelta = motorMaxDelta
         self.motorSpeedCoef = motorSpeedCoef
         self.PIDs = {"pitch":pitchPID, "roll":rollPID, "yawRate":yawPID} 
         self.IMU = IMU
-        self.motors = {"FR":motorFR, "FL":motorFL, "BR":motorBR, "BL":motorBL}
+        self.motors = (motorFR, motorFL, motorBR, motorBL)
+        self.motorCommand = [0,0,0,0]
+        self.lastMotorCommand = [0,0,0,0]
 
     def IMUStep(self):
         # --- Read IMU ---
@@ -41,21 +45,37 @@ class Flight_Controller():
         yaw_output = self.PIDs["yawRate"].Update(errors["yawRate"], safedt, gz)
 
         # --- Motor Mixing (X quad) ---
-        self.motorCommand = {
-        "FR":max(0, min((throttle - pitch_output - roll_output - yaw_output)*self.motorSpeedCoef, self.motorMaxSpeed)),
-        "FL":max(0, min((throttle - pitch_output + roll_output + yaw_output)*self.motorSpeedCoef, self.motorMaxSpeed)),
-        "BR":max(0, min((throttle + pitch_output + roll_output - yaw_output)*self.motorSpeedCoef, self.motorMaxSpeed)),
-        "BL":max(0, min((throttle + pitch_output - roll_output + yaw_output)*self.motorSpeedCoef, self.motorMaxSpeed)),
-        }
+        self.motorCommand = [
+        (throttle - pitch_output - roll_output - yaw_output)*self.motorSpeedCoef,
+        (throttle - pitch_output + roll_output + yaw_output)*self.motorSpeedCoef,
+        (throttle + pitch_output + roll_output - yaw_output)*self.motorSpeedCoef,
+        (throttle + pitch_output - roll_output + yaw_output)*self.motorSpeedCoef
+        ]
 
+        # --- Motor Clamping ---
+        max_motor = max(motors)
+        min_motor = min(motors)
+
+        if max_motor > 1.0:
+            excess = max_motor - 1.0
+            motors = [m - excess for m in motors]
+
+        if min_motor < 0.0:
+            deficit = -min_motor
+            motors = [m + deficit for m in motors]
+
+        # --- Slew Limiter ---
+        self.motorCommand = [max(prev - self.motorMaxDelta, min(cmd, prev + self.motorMaxDelta)) 
+                                for cmd, prev in zip(self.motorCommand, self.lastMotorCommand)]
+        self.lastMotorCommand = self.motorCommand
+        
         # --- Return Motor Commands ---
         return self.motorCommand, roll, pitch, yaw
 
     def SetMotors(self, command):
 
-        for pos, m in self.motors.items():
-            speed = command[pos]
-            m.SetSpeed(speed)
+        for c, m in zip(command, self.motors):
+            m.SetSpeed(c)
 
     def KillMotors(self):
         for m in self.motors:

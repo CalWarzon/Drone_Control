@@ -41,6 +41,7 @@ def FlightControlLoop(fc, xbox, safety, baseThrust = .3, throttleRange = .25, ra
     while True:
         #Runs input code every n timesteps
         if inputCount == 1:
+            LiveDisplayStep((np.round(np.array([[motorCommands[0], motorCommands[1]],[motorCommands[2], motorCommands[3]]]),2),roll, pitch, yaw, throttle, target_pitch, target_roll, target_yaw_rate))
             inputCount = inputEvery
 
             #Read Xbox Controller Input
@@ -84,7 +85,6 @@ def FlightControlLoop(fc, xbox, safety, baseThrust = .3, throttleRange = .25, ra
                 continue
 
             #Send Motor Commands
-            LiveDisplayStep((np.round(np.array([[motorCommands['FL'], motorCommands['FR']],[motorCommands['BL'], motorCommands['BR']]]),1),roll, pitch, yaw, throttle, target_pitch, target_roll, target_yaw_rate))
             #fc.SetMotors(motorCommands)
         else:
             fc.IMUStep()
@@ -200,7 +200,7 @@ fc = FC(pitchPID = PID(
             integrator_limit=.3,
             output_limit=.6,
             integral_fade=0.97,
-            d_filter_alpha=0.2,
+            d_filter_alpha=0.15,
             use_gyro_derivative=True
         ), 
         yawPID = PID(
@@ -210,7 +210,7 @@ fc = FC(pitchPID = PID(
             integrator_limit=.3,
             output_limit=.6,
             integral_fade=0.97,
-            d_filter_alpha=0.2,
+            d_filter_alpha=0.15,
             use_gyro_derivative=False
         ), 
         IMU = imu,
@@ -219,7 +219,7 @@ fc = FC(pitchPID = PID(
         motorBR = None,
         motorBL = None,
         motorSpeedCoef = 1,
-        motorMaxSpeed = .7
+        motorMaxSpeed = .6
         )
 
 
@@ -227,9 +227,9 @@ FlightControlLoop(
     fc = fc, 
     xbox = controller, 
     safety = safe, 
-    baseThrust = .25, 
-    throttleRange = .25, 
+    baseThrust = .5, 
+    throttleRange = .3, 
     rate = 100, 
-    inputEvery = 5, 
-    motorEvery = 10
+    inputEvery = 10, 
+    motorEvery = 1
 )
