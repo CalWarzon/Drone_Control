@@ -38,69 +38,76 @@ def FlightControlLoop(fc, xbox, safety, baseThrust = .3, throttleRange = .25, ra
     motorCount = motorEvery
     inputCount = inputEvery
     speedTest = []
+    throttle = 0
+    target_pitch = 0
+    target_roll = 0
+    target_yaw_rate = 0
     # Main Control Loop
-    try:
-        while True:
-            #Runs input code every n timesteps
-            if inputCount == 1:
-                LiveDisplayStep((np.round(np.array([[motorCommands[0], motorCommands[1]],[motorCommands[2], motorCommands[3]]]),2),roll, pitch, yaw, throttle, target_pitch, target_roll, target_yaw_rate, dt))
-                inputCount = inputEvery
+    #try:
+    while True:
+        #Runs input code every n timesteps
+        if inputCount == 0:
+            LiveDisplayStep((np.round(np.array([[motorCommands[0], motorCommands[1]],[motorCommands[2], motorCommands[3]]]),2),roll, pitch, yaw, throttle, target_pitch, target_roll, target_yaw_rate, dt))
+            inputCount = inputEvery
 
-                #Read Xbox Controller Input
-                controllerInput = xbox.Read()
+            #Read Xbox Controller Input
+            controllerInput = xbox.Read()
 
-                #Safety Shutoff
-                if controllerInput is None:
-                    fc.KillMotors()
-                    continue
-                safety.UpdateController()
+            #Safety Shutoff
+            if controllerInput is None:
+                fc.KillMotors()
+                continue
+            safety.UpdateController()
 
-                #Check Arming
-                safety.UpdateArming(controllerInput)
+            #Check Arming
+            safety.UpdateArming(controllerInput)
 
-                #Convert Xbox Input to Flight Controller Commands
-                throttle = controllerInput['ly']  # Left stick vertical for throttle
-                throttle = baseThrust + throttleRange * throttle  # Scale to a range centered around base thrust
-                target_pitch = controllerInput['ry']  # Right stick vertical for pitch
-                target_roll = controllerInput['rx']  # Right stick horizontal for roll
-                target_yaw_rate = controllerInput['lx']  # Left stick horizontal for yaw rate
-
-            # Update Flight Controller with new input every n timesteps
-            if motorCount == 1:
-                motorCount = motorEvery
-                now = t.perf_counter()
-                dt = now - dtLastTime
-                dtLastTime = now
-                motorCommands, roll, pitch, yaw = fc.LoopStep(throttle, target_pitch, target_roll, target_yaw_rate, dt)
+            #Convert Xbox Input to Flight Controller Commands
+            throttle = controllerInput['ly']  # Left stick vertical for throttle
+            throttle = baseThrust + throttleRange * throttle  # Scale to a range centered around base thrust
+            target_pitch = controllerInput['ry']  # Right stick vertical for pitch
+            target_roll = controllerInput['rx']  # Right stick horizontal for roll
+            target_yaw_rate = controllerInput['lx']  # Left stick horizontal for yaw rate
         
-                #Safety Checks
-                safety.UpdateLoop()
+        #Advance Countdown
+        inputCount -= 1
+        
+        # Update Flight Controller with new input every n timesteps
+        if motorCount == 0:
+            motorCount = motorEvery
+            now = t.perf_counter()
+            dt = now - dtLastTime
+            dtLastTime = now
+            motorCommands, roll, pitch, yaw = fc.LoopStep(throttle, target_pitch, target_roll, target_yaw_rate, dt)
+        
+            #Safety Checks
+            safety.UpdateLoop()
 
-                if safety.CheckFailsafe((roll, pitch, yaw)):
-                    LiveDisplayStep("Killed Motors")
-                    #fc.KillMotors()
-                    continue
+            if safety.CheckFailsafe((roll, pitch, yaw)):
+                #LiveDisplayStep(("Killed Motors FailSafe", ))
+                #fc.KillMotors()
+                continue
 
-                if not safety.MotorsEnabled():
-                    LiveDisplayStep("Killed Motors")
-                    #fc.KillMotors()
-                    continue
+            if not safety.MotorsEnabled():
+                LiveDisplayStep("Killed Motors Disabled")
+                #fc.KillMotors()
+                continue
 
-            #Send Motor Commands
-            #fc.SetMotors(motorCommands)
-            else:
-                fc.IMUStep()
-            #Step Skips
-            inputCount -= 1
-            motorCount -= 1
-
-            # Sleep to maintain loop rate
-            speedTest.append(t.perf_counter()-sleepLastTime)
-            t.sleep(max(0, loopTime - (t.perf_counter()-sleepLastTime)))
-            sleepLastTime = t.perf_counter()
-    except:
+        #Send Motor Commands
+        #fc.SetMotors(motorCommands)
+        else:
+            fc.IMUStep()
+        
+        #Advance Countdown
+        motorCount -= 1
+        
+        # Sleep to maintain loop rate
+        #speedTest.append(t.perf_counter()-sleepLastTime)
+        t.sleep(max(0, loopTime - (t.perf_counter()-sleepLastTime)))
+        sleepLastTime = t.perf_counter()
+    #except:
         #fc.KillMotors()
-        print(speedTest[:30], sum(speedTest)/len(speedTest))
+        #print(speedTest[:30], sum(speedTest)/len(speedTest))
 
 
 def LiveDisplay(data_function, hz=10):
@@ -184,37 +191,37 @@ def LiveDisplayStep(data):
 
 #IMU Read Speed: .00147s
 
-    
+''' 
 imu = IMU()
 imu.LoadCalibration("IMU_cal_v1")
 controller = Xbox()
 safe = Safety()
 fc = FC(pitchPID = PID(
-            kp = 1.8,
-            ki = .0,
-            kd = .015,
+            kp = .15,
+            ki = .07,
+            kd = .002,
             integrator_limit=.3,
-            output_limit=.6,
+            output_limit=.2,
             integral_fade=0.97,
             d_filter_alpha=0.15,
             use_gyro_derivative=True
         ), 
         rollPID = PID(
-            kp = 1.8,
-            ki = .0,
-            kd = .015,
+            kp = .15,
+            ki = .07,
+            kd = .002,
             integrator_limit=.3,
-            output_limit=.6,
+            output_limit=.2,
             integral_fade=0.97,
             d_filter_alpha=0.15,
             use_gyro_derivative=True
         ), 
         yawPID = PID(
-            kp = 1.2,
-            ki = .0,
+            kp = .08,
+            ki = .04,
             kd = .0,
             integrator_limit=.3,
-            output_limit=.4,
+            output_limit=.2,
             integral_fade=0.97,
             d_filter_alpha=0.15,
             use_gyro_derivative=False
@@ -225,7 +232,8 @@ fc = FC(pitchPID = PID(
         motorBR = None,
         motorBL = None,
         motorSpeedCoef = 1,
-        motorMaxSpeed = .6
+        motorMaxSpeed = .6,
+        motorMaxDelta = .01
         )
 
 
@@ -235,7 +243,15 @@ FlightControlLoop(
     safety = safe, 
     baseThrust = .3, 
     throttleRange = .3, 
-    rate = 100, 
-    inputEvery = 20, 
+    rate = 200, 
+    inputEvery = 8, 
     motorEvery = 1
 )
+'''
+motor = ESC(26, 2000, 1000, 1400, 1080)
+
+motor.Arm()
+t.sleep(1)
+motor.SweepPWM(1080, 1800, .5, .01)
+t.sleep(1)
+motor.Kill()

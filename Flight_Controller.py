@@ -56,18 +56,18 @@ class Flight_Controller():
         ]
 
         # --- Motor Clamping ---
-        max_motor = max(motors)
-        min_motor = min(motors)
+        max_motor = max(self.motorCommand)
+        min_motor = min(self.motorCommand)
 
-        if max_motor > 1.0:
-            excess = max_motor - 1.0
-            motors = [m - excess for m in motors]
+        if max_motor > self.motorMaxSpeed:
+            excess = max_motor - self.motorMaxSpeed
+            self.motorCommand = [m - excess for m in self.motorCommand]
 
         if min_motor < 0.0:
             deficit = -min_motor
-            motors = [m + deficit for m in motors]
+            self.motorCommand = [m + deficit for m in self.motorCommand]
 
-        motors = [max(0.0, min(1.0, motors[m])) for m in motors]
+        self.motorCommand = [max(0.0, min(self.motorMaxSpeed, m)) for m in self.motorCommand]
 
         # --- Slew Limiter ---
         self.motorCommand = [max(prev - self.motorMaxDelta, min(cmd, prev + self.motorMaxDelta)) 

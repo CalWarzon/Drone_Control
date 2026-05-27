@@ -3,12 +3,17 @@ import time as t
 
 
 class ESC_Brushless():
-    def __init__(self, pin, maxPulseWidth = 2000, minPulseWidth = 1000):
+    def __init__(self, pin,
+                 maxPulseWidth = 2000,
+                 minPulseWidth = 1000,
+                 maxPulseWidthSafe = 1050,
+                 minPulseWidthSafe = 1500
+                 ):
         self.pin = pin
         self.maxp = maxPulseWidth
         self.minp = minPulseWidth
-        self.maxpSafe
-        self.minpSafe
+        self.maxpSafe = maxPulseWidthSafe
+        self.minpSafe = minPulseWidthSafe
         self.pi = pigpio.pi()
         self.pi.set_servo_pulsewidth(self.pin, 0)
 
