@@ -4,6 +4,7 @@ from PID import PID
 from Xbox_Controller import XboxController as Xbox
 from Flight_Controller import Flight_Controller as FC
 from SafetyManager import SafetyManager as Safety
+from Simulator import DroneSimulator as Sim
 import random as r
 import time as t
 import sys
@@ -31,8 +32,13 @@ def OneTimeIMUCalibration(imu, saveFile, tempPoints = 4, rotMatrix = None):
     imu.SaveCalibration(saveFile)
 
 
-def FlightControlLoop(fc, xbox, safety, baseThrust = .3, throttleRange = .25, rate = 100, inputEvery = 4, motorEvery = 2):
+def FlightControlLoop(fc, xbox, safety, 
+                      baseThrust = .3, throttleRange = .25, 
+                      rate = 100, inputEvery = 4, motorEvery = 2,
+                      doSim = False, sim = None
+                      ):
     loopTime = 1/rate
+    dt = 1/rate
     sleepLastTime = t.perf_counter()
     dtLastTime = t.perf_counter()
     motorCount = motorEvery
@@ -42,12 +48,19 @@ def FlightControlLoop(fc, xbox, safety, baseThrust = .3, throttleRange = .25, ra
     target_pitch = 0
     target_roll = 0
     target_yaw_rate = 0
+    state = dict()
+    motorCommands = [0,0,0,0]
+
     # Main Control Loop
     #try:
     while True:
         #Runs input code every n timesteps
-        if inputCount == 0:
-            LiveDisplayStep((np.round(np.array([[motorCommands[0], motorCommands[1]],[motorCommands[2], motorCommands[3]]]),2),roll, pitch, yaw, throttle, target_pitch, target_roll, target_yaw_rate, dt))
+        if doSim:
+            state = sim.Update(tuple(motorCommands))
+            
+
+
+        if inputCount == 0 and False:
             inputCount = inputEvery
 
             #Read Xbox Controller Input
@@ -76,9 +89,9 @@ def FlightControlLoop(fc, xbox, safety, baseThrust = .3, throttleRange = .25, ra
         if motorCount == 0:
             motorCount = motorEvery
             now = t.perf_counter()
-            dt = now - dtLastTime
-            dtLastTime = now
-            motorCommands, roll, pitch, yaw = fc.LoopStep(throttle, target_pitch, target_roll, target_yaw_rate, dt)
+            #dt = now - dtLastTime
+            #dtLastTime = now
+            motorCommands, roll, pitch, yaw = fc.LoopStep(throttle, target_pitch, target_roll, target_yaw_rate, dt, pitch, roll, yaw, gx, gy, gz)
         
             #Safety Checks
             safety.UpdateLoop()
@@ -101,6 +114,8 @@ def FlightControlLoop(fc, xbox, safety, baseThrust = .3, throttleRange = .25, ra
         #Advance Countdown
         motorCount -= 1
         
+        LiveDisplayStep((np.round(np.array([[motorCommands[0], motorCommands[1]],[motorCommands[2], motorCommands[3]]]),2),roll, pitch, yaw, throttle, target_pitch, target_roll, target_yaw_rate, dt))
+
         # Sleep to maintain loop rate
         #speedTest.append(t.perf_counter()-sleepLastTime)
         t.sleep(max(0, loopTime - (t.perf_counter()-sleepLastTime)))
@@ -191,7 +206,7 @@ def LiveDisplayStep(data):
 
 #IMU Read Speed: .00147s
 
-''' 
+
 imu = IMU()
 imu.LoadCalibration("IMU_cal_v1")
 controller = Xbox()
@@ -233,9 +248,14 @@ fc = FC(pitchPID = PID(
         motorBL = None,
         motorSpeedCoef = 1,
         motorMaxSpeed = .6,
-        motorMaxDelta = .01
+        motorMaxDelta = .01,
+        useIMU=False
         )
 
+sim = Sim(mass = .25,
+          arm_length = .1,
+          max_thrust_per_motor = .25,
+          dt = .005)
 
 FlightControlLoop(
     fc = fc, 
@@ -245,8 +265,12 @@ FlightControlLoop(
     throttleRange = .3, 
     rate = 200, 
     inputEvery = 8, 
-    motorEvery = 1
+    motorEvery = 1,
+    doSim=True,
+    sim=sim
 )
+
+
 '''
 motor = ESC(26, 2000, 1000, 1400, 1080)
 
@@ -255,3 +279,4 @@ t.sleep(1)
 motor.SweepPWM(1080, 1800, .5, .01)
 t.sleep(1)
 motor.Kill()
+'''
