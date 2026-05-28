@@ -54,12 +54,17 @@ def FlightControlLoop(fc, xbox, safety,
     # Main Control Loop
     #try:
     while True:
-        #Runs input code every n timesteps
+        
         if doSim:
             state = sim.Update(tuple(motorCommands))
-            
+            pitch = state["pitch"]
+            roll = state["roll"]
+            yaw = state["yaw"]
+            gx = state["gx"]
+            gy = state["gy"]
+            gz = state["gz"]
 
-
+        #Runs input code every n timesteps
         if inputCount == 0 and False:
             inputCount = inputEvery
 
@@ -96,18 +101,18 @@ def FlightControlLoop(fc, xbox, safety,
             #Safety Checks
             safety.UpdateLoop()
 
-            if safety.CheckFailsafe((roll, pitch, yaw)):
+            #if safety.CheckFailsafe((roll, pitch, yaw)):
                 #LiveDisplayStep(("Killed Motors FailSafe", ))
                 #fc.KillMotors()
-                continue
+                #continue
 
-            if not safety.MotorsEnabled():
+            if not safety.MotorsEnabled() and not doSim:
                 LiveDisplayStep("Killed Motors Disabled")
-                #fc.KillMotors()
+                fc.KillMotors()
                 continue
 
-        #Send Motor Commands
-        #fc.SetMotors(motorCommands)
+            #Send Motor Commands
+            #fc.SetMotors(motorCommands)
         else:
             fc.IMUStep()
         
@@ -255,7 +260,9 @@ fc = FC(pitchPID = PID(
 sim = Sim(mass = .25,
           arm_length = .1,
           max_thrust_per_motor = .25,
-          dt = .005)
+          dt = .005,
+          wind_speed = 0,
+          wind_torque = 0)
 
 FlightControlLoop(
     fc = fc, 
