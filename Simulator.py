@@ -11,7 +11,9 @@ class DroneSimulator:
         arm_length=0.1,
         max_thrust_per_motor=5.0,
         inertia=(0.002, 0.002, 0.004),
-        dt=0.002
+        dt=0.002,
+        wind_force = 1.5,
+        wind_torque = .03
     ):
 
         # Physics
@@ -69,8 +71,8 @@ class DroneSimulator:
         self.wind_torque = np.zeros(3)
 
         # Wind configuration
-        self.wind_force_strength = 1.5
-        self.wind_torque_strength = 0.03
+        self.wind_force_strength = wind_force
+        self.wind_torque_strength = wind_torque
 
         # Wind persistence
         # higher = smoother wind
