@@ -1,5 +1,5 @@
 from IMU import IMU
-#from ESC_Control import ESC_Brushless as ESC
+from ESC_Control import ESC_Brushless as ESC
 from PID import PID
 from Xbox_Controller import XboxController as Xbox
 from Flight_Controller import Flight_Controller as FC
@@ -33,7 +33,8 @@ def OneTimeIMUCalibration(imu, saveFile, tempPoints = 4, rotMatrix = None):
 
 
 def FlightControlLoop(fc, xbox, safety, 
-                      baseThrust = .3, throttleRange = .25, 
+                      baseThrust = .3, throttleRange = .25,
+                      yawSpeed = 50, pitchLean = 20, rollLean = 20,
                       rate = 100, inputEvery = 4,
                       doSim = False, sim = None
                       ):
@@ -66,10 +67,9 @@ def FlightControlLoop(fc, xbox, safety,
             x = state["x"]
             y = state["y"]
             z = state["z"]
-            safety.UpdateController()
 
         #Runs input code every n timesteps
-        if inputCount == 0 and False:
+        if inputCount == 0:
             inputCount = inputEvery
 
             #Read Xbox Controller Input
@@ -87,9 +87,9 @@ def FlightControlLoop(fc, xbox, safety,
             #Convert Xbox Input to Flight Controller Commands
             throttle = controllerInput['ly']  # Left stick vertical for throttle
             throttle = baseThrust + throttleRange * throttle  # Scale to a range centered around base thrust
-            target_pitch = controllerInput['ry']  # Right stick vertical for pitch
-            target_roll = controllerInput['rx']  # Right stick horizontal for roll
-            target_yaw_rate = controllerInput['lx']  # Left stick horizontal for yaw rate
+            target_pitch = pitchLean * controllerInput['ry']  # Right stick vertical for pitch
+            target_roll = rollLean * controllerInput['rx']  # Right stick horizontal for roll
+            target_yaw_rate =  yawSpeed * controllerInput['lx']  # Left stick horizontal for yaw rate
         
         #Advance Countdown
         inputCount -= 1
@@ -103,23 +103,15 @@ def FlightControlLoop(fc, xbox, safety,
         #Safety Checks
         safety.UpdateLoop()
 
-        #if safety.CheckFailsafe((roll, pitch, yaw)):
-            #LiveDisplayStep(("Killed Motors FailSafe", ))
+        if safety.CheckFailsafe((roll, pitch, yaw)):
+            LiveDisplayStep(("Killed Motors FailSafe", ))
             #fc.KillMotors()
-            #continue
-            #if safety.CheckFailsafe((roll, pitch, yaw)):
-                #LiveDisplayStep(("Killed Motors FailSafe", ))
-                #fc.KillMotors()
-                #continue
+            continue
 
-        #if not safety.MotorsEnabled():
-            #LiveDisplayStep("Killed Motors Disabled")
+        if not safety.MotorsEnabled():
+            LiveDisplayStep("Killed Motors Disabled")
             #fc.KillMotors()
-            #continue
-            #if not safety.MotorsEnabled() and not doSim:
-                #LiveDisplayStep("Killed Motors Disabled")
-                #fc.KillMotors()
-                #continue
+            continue
 
         #Send Motor Commands
         #fc.SetMotors(motorCommands)
@@ -225,7 +217,7 @@ controller = Xbox()
 safe = Safety()
 fc = FC(pitchPID = PID(
             kp = .008,
-            ki = .006,
+            ki = .007,
             kd = .0018,
             integrator_limit=.3,
             output_limit=.2,
@@ -235,7 +227,7 @@ fc = FC(pitchPID = PID(
         ), 
         rollPID = PID(
             kp = .008,
-            ki = .006,
+            ki = .007,
             kd = .0018,
             integrator_limit=.3,
             output_limit=.2,
@@ -245,7 +237,7 @@ fc = FC(pitchPID = PID(
         ), 
         yawPID = PID(
             kp = .001,
-            ki = .0001,
+            ki = .0012,
             kd = .0001,
             integrator_limit=.3,
             output_limit=.2,
@@ -268,7 +260,7 @@ sim = Sim(mass = .25,
           arm_length = .1,
           max_thrust_per_motor = 2.5,
           dt = .005,
-          wind_force = 1.5,
+          wind_force = 0,
           wind_torque = .03)
 
 FlightControlLoop(
@@ -276,7 +268,9 @@ FlightControlLoop(
     xbox = controller, 
     safety = safe, 
     baseThrust = .25, 
-    throttleRange = .3, 
+    throttleRange = .3,
+    pitchLean = 45,
+    rollLean = 45,
     rate = 200, 
     inputEvery = 8, 
     doSim=True,
