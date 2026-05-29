@@ -1,5 +1,5 @@
 from IMU import IMU
-from ESC_Control import ESC_Brushless as ESC
+#from ESC_Control import ESC_Brushless as ESC
 from PID import PID
 from Xbox_Controller import XboxController as Xbox
 from Flight_Controller import Flight_Controller as FC
@@ -34,14 +34,13 @@ def OneTimeIMUCalibration(imu, saveFile, tempPoints = 4, rotMatrix = None):
 
 def FlightControlLoop(fc, xbox, safety, 
                       baseThrust = .3, throttleRange = .25, 
-                      rate = 100, inputEvery = 4, motorEvery = 2,
+                      rate = 100, inputEvery = 4,
                       doSim = False, sim = None
                       ):
     loopTime = 1/rate
     dt = 1/rate
     sleepLastTime = t.perf_counter()
     dtLastTime = t.perf_counter()
-    motorCount = motorEvery
     inputCount = inputEvery
     speedTest = []
     throttle = 0
@@ -56,7 +55,7 @@ def FlightControlLoop(fc, xbox, safety,
     while True:
         #Runs input code every n timesteps
         if doSim:
-            state = sim.Update(tuple(motorCommands))
+            state = sim.Step(motorCommands[0], motorCommands[1], motorCommands[2], motorCommands[3])
             
 
 
@@ -85,31 +84,27 @@ def FlightControlLoop(fc, xbox, safety,
         #Advance Countdown
         inputCount -= 1
         
-        # Update Flight Controller with new input every n timesteps
-        if motorCount == 0:
-            motorCount = motorEvery
-            now = t.perf_counter()
-            #dt = now - dtLastTime
-            #dtLastTime = now
-            motorCommands, roll, pitch, yaw = fc.LoopStep(throttle, target_pitch, target_roll, target_yaw_rate, dt, pitch, roll, yaw, gx, gy, gz)
+        # Update Flight Controller with new input
+        now = t.perf_counter()
+        #dt = now - dtLastTime
+        #dtLastTime = now
+        motorCommands, roll, pitch, yaw = fc.LoopStep(throttle, target_pitch, target_roll, target_yaw_rate, dt, pitch, roll, yaw, gx, gy, gz)
         
-            #Safety Checks
-            safety.UpdateLoop()
+        #Safety Checks
+        safety.UpdateLoop()
 
-            if safety.CheckFailsafe((roll, pitch, yaw)):
-                #LiveDisplayStep(("Killed Motors FailSafe", ))
-                #fc.KillMotors()
-                continue
+        if safety.CheckFailsafe((roll, pitch, yaw)):
+            #LiveDisplayStep(("Killed Motors FailSafe", ))
+            #fc.KillMotors()
+            continue
 
-            if not safety.MotorsEnabled():
-                LiveDisplayStep("Killed Motors Disabled")
-                #fc.KillMotors()
-                continue
+        if not safety.MotorsEnabled():
+            LiveDisplayStep("Killed Motors Disabled")
+            #fc.KillMotors()
+            continue
 
         #Send Motor Commands
         #fc.SetMotors(motorCommands)
-        else:
-            fc.IMUStep()
         
         #Advance Countdown
         motorCount -= 1
@@ -265,7 +260,6 @@ FlightControlLoop(
     throttleRange = .3, 
     rate = 200, 
     inputEvery = 8, 
-    motorEvery = 1,
     doSim=True,
     sim=sim
 )

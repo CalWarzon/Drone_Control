@@ -145,7 +145,7 @@ class DroneSimulator:
             self.wind_torque_strength
         )
 
-    def step(self, FR, FL, BR, BL):
+    def Step(self, FR, FL, BR, BL):
 
         # Clamp inputs
         FR = max(0.0, min(1.0, FR))

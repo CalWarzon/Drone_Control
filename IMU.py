@@ -2,8 +2,8 @@ import time as t
 import json
 import numpy as np
 import sys
-from smbus2 import SMBus
-from ahrs.filters import Mahony
+#from smbus2 import SMBus
+#from ahrs.filters import Mahony
 
 
 class IMU:
@@ -49,11 +49,12 @@ class IMU:
 
         # Mahony Fliter
         self.q = np.array([1.0, 0.0, 0.0, 0.0])
+        '''
         self.ahrs = Mahony(
             k_P=1.0,
             k_I=0.3
         )
-
+        '''
         # Complementary filter state
         self.angle = np.zeros(3)
         self.last_time = t.time()
@@ -66,14 +67,14 @@ class IMU:
         self.accel_regs = 0x00
         self.gyro_regs = 0x00
 
-        self.bus = SMBus(bus_num)
-
+        #self.bus = SMBus(bus_num)
+        '''
         # Wake up MPU6050
         self.bus.write_byte_data(
             self.MPU_ADDR,
             self.PWR_MGMT_1,
             0x00
-        )
+        )   
 
         t.sleep(0.1)
 
@@ -106,7 +107,7 @@ class IMU:
             self.ACCEL_CONFIG,
             self.accel_regs
         )
-
+    '''
     # ---------------------------
     # BASIC UTILITIES
     # ---------------------------
@@ -507,7 +508,7 @@ class IMU:
         # Restore ranges safely
         accel_range = self.calibration["accel_range"]
         gyro_range = self.calibration["gyro_range"]
-        self.SetSensorRanges(accel_range, gyro_range)
+        #self.SetSensorRanges(accel_range, gyro_range)
 
         print(f"Calibration loaded from {filename}")
 

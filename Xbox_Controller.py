@@ -1,11 +1,11 @@
-import evdev
-from evdev import InputDevice, ecodes
+#import evdev
+#from evdev import InputDevice, ecodes
 import select
 
 
 class XboxController:
     def __init__(self, name="Xbox"):
-        self.device = self.FindDevice(name)
+        #self.device = self.FindDevice(name)
 
         # State (normalized)
         self.state = {
