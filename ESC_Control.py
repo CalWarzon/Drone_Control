@@ -100,11 +100,9 @@ class ESC_Brushless():
                 t.sleep(time_per_speed)
 
                 pwm += step
-
         finally:
-            # Stop motor at end
-            self.pi.set_servo_pulsewidth(self.pin, 0)
+            print("Sweep Finished")
 
-        print("Motor stopped")
+        
 
 
