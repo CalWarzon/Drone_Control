@@ -210,7 +210,7 @@ def LiveDisplayStep(data):
 
 #IMU Read Speed: .00147s
 
-
+'''
 imu = IMU()
 imu.LoadCalibration("IMU_cal_v1")
 controller = Xbox()
@@ -277,13 +277,13 @@ FlightControlLoop(
     sim=sim
 )
 
-
 '''
+
 motor = ESC(26, 2000, 1000, 1400, 1080)
 
-motor.Arm()
+motor.Calibrate()
+#motor.Arm()
 t.sleep(1)
-motor.SweepPWM(1080, 1800, .5, .01)
+motor.SweepPWM(1080, 1200, .5, .01)
 t.sleep(1)
 motor.Kill()
-'''
