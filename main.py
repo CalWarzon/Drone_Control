@@ -236,7 +236,7 @@ mBL = ESC(
     minPulseWidthSafe = 1080)
 
 imu = IMU()
-imu.LoadCalibration("IMU_cal_v1")
+#imu.LoadCalibration("IMU_cal_v1")
 
 controller = Xbox()
 
@@ -291,6 +291,9 @@ sim = Sim(mass = .25,
           wind_torque = .03)
 '''
 
+OneTimeIMUCalibration(imu = imu, saveFile = "IMU_cal_v1")
+
+'''
 fc.ArmMotors()
 
 FlightControlLoop(
@@ -305,5 +308,5 @@ FlightControlLoop(
     inputEvery = 8, 
     doSim=False
 )
-
+'''
 
