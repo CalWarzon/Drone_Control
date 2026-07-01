@@ -14,7 +14,7 @@ import numpy as np
 def OneTimeIMUCalibration(imu, saveFile, tempPoints = 4, rotMatrix = None):
     # Multi-point Tempature Calibration
     input("Press Enter to Start Multi-Point Temp Calibration")
-    imu.CalibrateTemperatureMulti(tempPoints)
+    #imu.CalibrateTemperatureMulti(tempPoints)
 
     # Standard IMU Calibration
     input("Press Enter to Start Bias Calibration")
@@ -38,11 +38,11 @@ def FlightControlLoop(fc, xbox, safety,
                       rate = 100, inputEvery = 4,
                       doSim = False, sim = None
                       ):
-    #loopTime = 1/rate
+    loopTime = 1/rate
     #dt = 1/rate
     sleepLastTime = t.perf_counter()
     dtLastTime = t.perf_counter()
-    inputCount = inputEvery
+    inputCount = 0
     speedTest = []
     displayTime = t.perf_counter()
     throttle = .25
@@ -98,28 +98,31 @@ def FlightControlLoop(fc, xbox, safety,
         now = t.perf_counter()
         dt = now - dtLastTime
         dtLastTime = now
-        motorCommands, roll, pitch, yaw = fc.LoopStep(throttle, target_pitch, target_roll, target_yaw_rate, dt, pitch, roll, yaw, gx, gy, gz)
+        motorCommands, roll, pitch, yaw = fc.LoopStep(throttle, target_pitch, target_roll, target_yaw_rate, dt)
+        #motorCommands, roll, pitch, yaw = fc.LoopStep(throttle, target_pitch, target_roll, target_yaw_rate, dt, pitch, roll, yaw, gx, gy, gz)
+         
+        #LiveDisplayStep((motorCommands, roll, pitch, yaw, dt))
         
         #Safety Checks
         safety.UpdateLoop()
 
         if safety.CheckFailsafe((roll, pitch, yaw)):
-            LiveDisplayStep(("Killed Motors FailSafe", ))
+            print("Killed Motors FailSafe")
             fc.KillMotors()
             continue
 
         if not safety.MotorsEnabled():
-            LiveDisplayStep("Killed Motors Disabled")
+            print("Killed Motors Disabled")
             fc.KillMotors()
             continue
 
         #Send Motor Commands
         fc.SetMotors(motorCommands)
-        
+        '''
         if displayTime + .2 < t.perf_counter():
             displayTime = t.perf_counter()
             LiveDisplayStep((np.round(np.array([[motorCommands[0], motorCommands[1]],[motorCommands[2], motorCommands[3]]]),2),pitch, roll, gz, throttle, "\n", target_pitch, target_roll, target_yaw_rate, "\n",x ,y ,z, "\n",dt))
-
+        '''
         # Sleep to maintain loop rate
         #speedTest.append(t.perf_counter()-sleepLastTime)
         t.sleep(max(0, loopTime - (t.perf_counter()-sleepLastTime)))
@@ -236,7 +239,7 @@ mBL = ESC(
     minPulseWidthSafe = 1080)
 
 imu = IMU()
-#imu.LoadCalibration("IMU_cal_v1")
+imu.LoadCalibration("IMU_cal_v1")
 
 controller = Xbox()
 
@@ -291,9 +294,9 @@ sim = Sim(mass = .25,
           wind_torque = .03)
 '''
 
-OneTimeIMUCalibration(imu = imu, saveFile = "IMU_cal_v1")
+#OneTimeIMUCalibration(imu = imu, saveFile = "IMU_cal_v1")
 
-'''
+
 fc.ArmMotors()
 
 FlightControlLoop(
@@ -305,9 +308,9 @@ FlightControlLoop(
     pitchLean = 45,
     rollLean = 45,
     rate = 200, 
-    inputEvery = 8, 
+    inputEvery = 1, 
     doSim=False
 )
-'''
+
 
 
