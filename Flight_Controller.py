@@ -82,7 +82,6 @@ class Flight_Controller():
         return self.motorCommand, roll, pitch, yaw
 
     def SetMotors(self, command):
-
         for c, m in zip(command, self.motors):
             m.SetSpeed(c)
 
@@ -90,4 +89,7 @@ class Flight_Controller():
         for m in self.motors:
             m.Kill()
 
+    def ArmMotors(self):
+        for m in self.motors:
+            m.Arm()
         
