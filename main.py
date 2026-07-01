@@ -310,16 +310,4 @@ FlightControlLoop(
 )
 '''
 
-<<<<<<< HEAD
-motor = ESC(26, 2000, 1000, 1400, 1080)
 
-#motor.Calibrate()
-motor.Arm()
-t.sleep(1)
-motor.SweepPWM(1000, 1700, .5, .01)
-t.sleep(3)
-motor.SweepPWM(1700, 1000, -.5, .01)
-t.sleep(1)
-motor.Kill()
-=======
->>>>>>> f1939f089fd9be61d5cefe0f5a779a8d5c7f9142
