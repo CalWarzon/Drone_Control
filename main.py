@@ -38,8 +38,8 @@ def FlightControlLoop(fc, xbox, safety,
                       rate = 100, inputEvery = 4,
                       doSim = False, sim = None
                       ):
-    loopTime = 1/rate
-    dt = 1/rate
+    #loopTime = 1/rate
+    #dt = 1/rate
     sleepLastTime = t.perf_counter()
     dtLastTime = t.perf_counter()
     inputCount = inputEvery
@@ -96,8 +96,8 @@ def FlightControlLoop(fc, xbox, safety,
         
         # Update Flight Controller with new input
         now = t.perf_counter()
-        #dt = now - dtLastTime
-        #dtLastTime = now
+        dt = now - dtLastTime
+        dtLastTime = now
         motorCommands, roll, pitch, yaw = fc.LoopStep(throttle, target_pitch, target_roll, target_yaw_rate, dt, pitch, roll, yaw, gx, gy, gz)
         
         #Safety Checks
@@ -105,16 +105,16 @@ def FlightControlLoop(fc, xbox, safety,
 
         if safety.CheckFailsafe((roll, pitch, yaw)):
             LiveDisplayStep(("Killed Motors FailSafe", ))
-            #fc.KillMotors()
+            fc.KillMotors()
             continue
 
         if not safety.MotorsEnabled():
             LiveDisplayStep("Killed Motors Disabled")
-            #fc.KillMotors()
+            fc.KillMotors()
             continue
 
         #Send Motor Commands
-        #fc.SetMotors(motorCommands)
+        fc.SetMotors(motorCommands)
         
         if displayTime + .2 < t.perf_counter():
             displayTime = t.perf_counter()
@@ -210,11 +210,38 @@ def LiveDisplayStep(data):
 
 #IMU Read Speed: .00147s
 
-'''
+mFR = ESC(
+    pin = 16,
+    maxPulseWidth = 2000,
+    minPulseWidth = 1000,
+    maxPulseWidthSafe = 1700,
+    minPulseWidthSafe = 1080)
+mFL = ESC(
+    pin = 19, 
+    maxPulseWidth = 2000,
+    minPulseWidth = 1000,
+    maxPulseWidthSafe = 1700,
+    minPulseWidthSafe = 1080)
+mBR = ESC(
+    pin = 20, 
+    maxPulseWidth = 2000,
+    minPulseWidth = 1000,
+    maxPulseWidthSafe = 1700,
+    minPulseWidthSafe = 1080)
+mBL = ESC(
+    pin = 26,    
+    maxPulseWidth = 2000,
+    minPulseWidth = 1000,
+    maxPulseWidthSafe = 1700,
+    minPulseWidthSafe = 1080)
+
 imu = IMU()
-imu.LoadCalibration("IMU_cal_v1")
+#imu.LoadCalibration("IMU_cal_v1")
+
 controller = Xbox()
+
 safe = Safety()
+
 fc = FC(pitchPID = PID(
             kp = .008,
             ki = .007,
@@ -246,22 +273,28 @@ fc = FC(pitchPID = PID(
             use_gyro_derivative=False
         ), 
         IMU = imu,
-        motorFR = None,
-        motorFL = None,
-        motorBR = None,
-        motorBL = None,
+        motorFR = mFR,
+        motorFL = mFL,
+        motorBR = mBR,
+        motorBL = mBL,
         motorSpeedCoef = 1,
-        motorMaxSpeed = .6,
-        motorMaxDelta = .01,
-        useIMU=False
+        motorMaxSpeed = 1,
+        motorMaxDelta = .005,
+        useIMU=True
         )
-
+'''
 sim = Sim(mass = .25,
           arm_length = .1,
           max_thrust_per_motor = 2.5,
           dt = .005,
           wind_force = 0,
           wind_torque = .03)
+'''
+
+OneTimeIMUCalibration(imu = imu, saveFile = "IMU_cal_v1")
+
+'''
+fc.ArmMotors()
 
 FlightControlLoop(
     fc = fc, 
@@ -273,12 +306,11 @@ FlightControlLoop(
     rollLean = 45,
     rate = 200, 
     inputEvery = 8, 
-    doSim=True,
-    sim=sim
+    doSim=False
 )
-
 '''
 
+<<<<<<< HEAD
 motor = ESC(26, 2000, 1000, 1400, 1080)
 
 #motor.Calibrate()
@@ -289,3 +321,5 @@ t.sleep(3)
 motor.SweepPWM(1700, 1000, -.5, .01)
 t.sleep(1)
 motor.Kill()
+=======
+>>>>>>> f1939f089fd9be61d5cefe0f5a779a8d5c7f9142
