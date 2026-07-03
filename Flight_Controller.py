@@ -92,4 +92,11 @@ class Flight_Controller():
     def ArmMotors(self):
         for m in self.motors:
             m.Arm()
+
+    def CalibrateMotors(self):
+        input("Ensure props are removed and all ESC Power cords are Discontected then press Enter to start motor calibration...")
+        locations = ("Front Right", "Front Left", "Back Right", "Back Left")
+        for m, l in zip(self.motors, locations):
+            input(f"Find power cords for ESC {l} and press Enter to continue...")
+            m.Calibrate()
         

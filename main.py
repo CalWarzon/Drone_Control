@@ -31,7 +31,6 @@ def OneTimeIMUCalibration(imu, saveFile, tempPoints = 4, rotMatrix = None):
     # Save Calibration Data
     imu.SaveCalibration(saveFile)
 
-
 def FlightControlLoop(fc, xbox, safety, 
                       baseThrust = .3, throttleRange = .25,
                       yawSpeed = 50, pitchLean = 20, rollLean = 20,
@@ -296,7 +295,9 @@ sim = Sim(mass = .25,
 
 #OneTimeIMUCalibration(imu = imu, saveFile = "IMU_cal_v1")
 
+fc.CalibrateMotors()
 
+'''
 fc.ArmMotors()
 
 FlightControlLoop(
@@ -311,6 +312,6 @@ FlightControlLoop(
     inputEvery = 1, 
     doSim=False
 )
-
+'''
 
 
