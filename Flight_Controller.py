@@ -1,3 +1,5 @@
+import time as t
+
 class Flight_Controller():
     def __init__(self,
         pitchPID, 
@@ -94,9 +96,32 @@ class Flight_Controller():
             m.Arm()
 
     def CalibrateMotors(self):
-        input("Ensure props are removed and all ESC Power cords are Discontected then press Enter to start motor calibration...")
-        locations = ("Front Right", "Front Left", "Back Right", "Back Left")
-        for m, l in zip(self.motors, locations):
-            input(f"Find power cords for ESC {l} and press Enter to continue...")
-            m.Calibrate()
+        input("Ensure props are removed and battery is discontected then press Enter to start motor calibration...")
+        print("Starting ESC calibration")
+
+        # Send max throttle
+        for m in self.motors:
+            m.SetPWM(m.maxp)
+
+        input(
+            "Connect battery now.\n"
+            "After calibration beeps press ENTER."
+        )
+
+        # Send minimum throttle
+        for m in self.motors:
+            m.SetPWM(m.minp)
+
+        print("Waiting for ESC to confirm calibration...")
+
+        t.sleep(3)
+
+        # Hold minimum throttle to arm
+        print("Arming ESC...")
+
+        self.pi.set_servo_pulsewidth(self.pin, self.minp)
+
+        t.sleep(2)
+
+        print("Calibration complete")
         
