@@ -92,8 +92,22 @@ class Flight_Controller():
             m.Kill()
 
     def ArmMotors(self):
+        print("Arming ESCs...")
+
+        # Ensure stopped signal first
         for m in self.motors:
-            m.Arm()
+            m.SetPWM(0)
+
+        t.sleep(1)
+
+        # Send minimum throttle
+        for m in self.motors:
+            m.SetPWM(m.minp)
+
+        # Wait for ESC to arm
+        t.sleep(2)
+
+        print("ESCs armed")
 
     def CalibrateMotors(self):
         input("Ensure props are removed and battery is discontected then press Enter to start motor calibration...")
