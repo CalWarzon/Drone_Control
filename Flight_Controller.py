@@ -119,7 +119,8 @@ class Flight_Controller():
         # Hold minimum throttle to arm
         print("Arming ESC...")
 
-        self.pi.set_servo_pulsewidth(self.pin, self.minp)
+        for m in self.motors:
+            m.SetPWM(m.minp)
 
         t.sleep(2)
 
