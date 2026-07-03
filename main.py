@@ -295,7 +295,9 @@ sim = Sim(mass = .25,
 
 #OneTimeIMUCalibration(imu = imu, saveFile = "IMU_cal_v1")
 
-fc.CalibrateMotors()
+fc.SetMotors([0,0,0,0])
+t.sleep(2)
+fc.KillMotors()
 
 '''
 fc.ArmMotors()
