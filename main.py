@@ -296,7 +296,11 @@ sim = Sim(mass = .25,
 
 
 fc.ArmMotors()
+fc.SetMotors([0,0,0,0])
+t.sleep(3)
+fc.killMotors()
 
+'''
 FlightControlLoop(
     fc = fc, 
     xbox = controller, 
@@ -310,5 +314,5 @@ FlightControlLoop(
     doSim=False
 )
 
-
+'''
 
