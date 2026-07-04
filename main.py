@@ -100,18 +100,16 @@ def FlightControlLoop(fc, xbox, safety,
         motorCommands, roll, pitch, yaw = fc.LoopStep(throttle, target_pitch, target_roll, target_yaw_rate, dt)
         #motorCommands, roll, pitch, yaw = fc.LoopStep(throttle, target_pitch, target_roll, target_yaw_rate, dt, pitch, roll, yaw, gx, gy, gz)
          
-        #LiveDisplayStep((motorCommands, roll, pitch, yaw, dt))
+        LiveDisplayStep((motorCommands, roll, pitch, yaw, dt))
         
         #Safety Checks
         safety.UpdateLoop()
 
         if safety.CheckFailsafe((roll, pitch, yaw)):
-            print("Killed Motors FailSafe")
             fc.KillMotors()
             continue
 
         if not safety.MotorsEnabled():
-            print("Killed Motors Disabled")
             fc.KillMotors()
             continue
 
