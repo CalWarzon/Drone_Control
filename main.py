@@ -298,7 +298,7 @@ sim = Sim(mass = .25,
 #fc.CalibrateMotors()
 
 fc.ArmMotors()
-fc.SetMotors([.5,.5,.5,.5])
+fc.SetMotors([.45,.45,.45,.45])
 t.sleep(3)
 fc.KillMotors()
 
