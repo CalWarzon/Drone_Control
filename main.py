@@ -77,6 +77,7 @@ def FlightControlLoop(fc, xbox, safety,
             #Safety Shutoff
             if controllerInput is None:
                 fc.KillMotors()
+                fc.motorCommand = [0,0,0,0]
                 continue
             safety.UpdateController()
 
@@ -107,10 +108,12 @@ def FlightControlLoop(fc, xbox, safety,
 
         if safety.CheckFailsafe((roll, pitch, yaw)):
             fc.KillMotors()
+            fc.motorCommand = [0,0,0,0]
             continue
 
         if not safety.MotorsEnabled():
             fc.KillMotors()
+            fc.motorCommand = [0,0,0,0]
             continue
 
         #Send Motor Commands
@@ -279,7 +282,7 @@ fc = FC(pitchPID = PID(
         motorBL = mBL,
         motorSpeedCoef = 1,
         motorMaxSpeed = 1,
-        motorMaxDelta = .001,
+        motorMaxDelta = .005,
         useIMU=True
         )
 '''
