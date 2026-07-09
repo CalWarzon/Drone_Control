@@ -294,6 +294,7 @@ sim = Sim(mass = .25,
 #OneTimeIMUCalibration(imu = imu, saveFile = "IMU_cal_v1")
 
 mBR.Arm()
+fc.SetMotors([0,0,0,0])
 mBR.SweepPWM(1000, 1500, .5, .01)
 mBR.Kill()
 
