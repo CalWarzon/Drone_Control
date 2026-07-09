@@ -312,6 +312,7 @@ mBL.Kill()
 
 #fc.CalibrateMotors()
 
+'''
 fc.ArmMotors()
 speed = 0
 for i in range(100):
@@ -320,8 +321,9 @@ for i in range(100):
     t.sleep(.1)
 
 fc.KillMotors()
-
 '''
+
+
 FlightControlLoop(
     fc = fc, 
     xbox = controller, 
@@ -334,5 +336,5 @@ FlightControlLoop(
     inputEvery = 1, 
     doSim=False
 )
-'''
+
 
