@@ -310,7 +310,7 @@ mBL.SweepPWM(1000, 1600, .5, .01)
 mBL.Kill()
 '''
 
-fc.CalibrateMotors()
+#fc.CalibrateMotors()
 
 fc.ArmMotors()
 speed = 0
