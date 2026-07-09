@@ -108,11 +108,13 @@ def FlightControlLoop(fc, xbox, safety,
 
         if safety.CheckFailsafe((roll, pitch, yaw)):
             fc.KillMotors()
+            fc.lastMotorCommand = [0,0,0,0]
             fc.motorCommand = [0,0,0,0]
             continue
 
         if not safety.MotorsEnabled():
             fc.KillMotors()
+            fc.lastMotorCommand = [0,0,0,0]
             fc.motorCommand = [0,0,0,0]
             continue
 
