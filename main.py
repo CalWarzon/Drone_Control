@@ -293,14 +293,16 @@ sim = Sim(mass = .25,
 
 #OneTimeIMUCalibration(imu = imu, saveFile = "IMU_cal_v1")
 
-#mBL.Calibrate()
+mBL.Arm()
+mBL.SweepPWM(1000, 1500, .5, .01)
+mBL.Kill()
 
 #fc.CalibrateMotors()
 
-fc.ArmMotors()
-fc.SetMotors([.45,.45,.45,.45])
-t.sleep(3)
-fc.KillMotors()
+#fc.ArmMotors()
+#fc.SetMotors([.45,.45,.45,.45])
+#t.sleep(3)
+#fc.KillMotors()
 
 '''
 FlightControlLoop(
