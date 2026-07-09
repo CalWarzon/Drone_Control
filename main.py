@@ -295,9 +295,18 @@ sim = Sim(mass = .25,
 
 fc.KillMotors()
 
+mFR.Arm()
+mFR.SweepPWM(1000, 1600, .5, .01)
+mFR.Kill()
+mFL.Arm()
+mFL.SweepPWM(1000, 1600, .5, .01)
+mFL.Kill()
 mBR.Arm()
-mBR.SweepPWM(1000, 1500, .5, .01)
+mBR.SweepPWM(1000, 1600, .5, .01)
 mBR.Kill()
+mBL.Arm()
+mBL.SweepPWM(1000, 1600, .5, .01)
+mBL.Kill()
 
 #fc.CalibrateMotors()
 
