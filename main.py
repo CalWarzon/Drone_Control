@@ -242,7 +242,7 @@ mBL = ESC(
 
 imu = IMU()
 imu.LoadCalibration("IMU_cal_v1")
-imu.SetRotationMatrix(np.array([[0, -1, 0], [1, 0, 0], [0, 0, 1]])) # Rotate IMU to match drone orientation
+imu.SetRotationMatrix(np.array([[0, 1, 0], [-1, 0, 0], [0, 0, 1]])) # Rotate IMU to match drone orientation
 
 controller = Xbox()
 
