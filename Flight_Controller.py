@@ -57,8 +57,8 @@ class Flight_Controller():
         self.motorCommand = [
         (throttle - pitch_output - roll_output - yaw_output)*self.motorSpeedCoef,
         (throttle - pitch_output + roll_output + yaw_output)*self.motorSpeedCoef,
-        (throttle + pitch_output + roll_output - yaw_output)*self.motorSpeedCoef,
-        (throttle + pitch_output - roll_output + yaw_output)*self.motorSpeedCoef
+        (throttle + pitch_output - roll_output + yaw_output)*self.motorSpeedCoef,
+        (throttle + pitch_output + roll_output - yaw_output)*self.motorSpeedCoef
         ]
 
         # --- Motor Clamping ---

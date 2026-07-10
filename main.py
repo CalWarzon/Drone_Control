@@ -101,7 +101,7 @@ def FlightControlLoop(fc, xbox, safety,
         motorCommands, roll, pitch, yaw = fc.LoopStep(throttle, target_pitch, target_roll, target_yaw_rate, dt)
         #motorCommands, roll, pitch, yaw = fc.LoopStep(throttle, target_pitch, target_roll, target_yaw_rate, dt, pitch, roll, yaw, gx, gy, gz)
          
-        LiveDisplayStep((np.array([[motorCommands[0], motorCommands[1]],[motorCommands[2], motorCommands[3]]]), roll, pitch, yaw, dt))
+        LiveDisplayStep((np.array([[motorCommands[0], motorCommands[1]],[motorCommands[2], motorCommands[3]]]), pitch, roll, yaw, dt))
         
         #Safety Checks
         safety.UpdateLoop()
@@ -242,6 +242,7 @@ mBL = ESC(
 
 imu = IMU()
 imu.LoadCalibration("IMU_cal_v1")
+imu.SetRotationMatrix(np.array([[0, -1, 0], [1, 0, 0], [0, 0, 1]])) # Rotate IMU to match drone orientation
 
 controller = Xbox()
 
