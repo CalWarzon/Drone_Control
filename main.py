@@ -220,25 +220,25 @@ mFR = ESC(
     maxPulseWidth = 2000,
     minPulseWidth = 1000,
     maxPulseWidthSafe = 1700,
-    minPulseWidthSafe = 1090)
+    minPulseWidthSafe = 1080)
 mFL = ESC(
     pin = 19, 
     maxPulseWidth = 2000,
     minPulseWidth = 1000,
     maxPulseWidthSafe = 1700,
-    minPulseWidthSafe = 1090)
+    minPulseWidthSafe = 1080)
 mBR = ESC(
     pin = 20, 
     maxPulseWidth = 2000,
     minPulseWidth = 1000,
     maxPulseWidthSafe = 1700,
-    minPulseWidthSafe = 1090)
+    minPulseWidthSafe = 1080)
 mBL = ESC(
     pin = 26,    
     maxPulseWidth = 2000,
     minPulseWidth = 1000,
     maxPulseWidthSafe = 1700,
-    minPulseWidthSafe = 1090)
+    minPulseWidthSafe = 1080)
 
 imu = IMU()
 imu.LoadCalibration("IMU_cal_v1")
@@ -285,7 +285,7 @@ fc = FC(pitchPID = PID(
         motorBL = mBL,
         motorSpeedCoef = 1,
         motorMaxSpeed = 1,
-        motorMaxDelta = .005,
+        motorMaxDelta = .003,
         useIMU=True
         )
 '''
