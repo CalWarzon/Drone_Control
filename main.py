@@ -50,6 +50,8 @@ def FlightControlLoop(fc, xbox, safety,
     target_yaw_rate = 0
     state = dict()
     motorCommands = [0,0,0,0]
+    slowStartDone = False
+    slowStartTime = t.perf_counter()
 
     # Main Control Loop
     #try:
@@ -110,14 +112,22 @@ def FlightControlLoop(fc, xbox, safety,
             fc.KillMotors()
             fc.lastMotorCommand = [0,0,0,0]
             fc.motorCommand = [0,0,0,0]
+            slowStartDone = False
             continue
 
         if not safety.MotorsEnabled():
             fc.KillMotors()
             fc.lastMotorCommand = [0,0,0,0]
             fc.motorCommand = [0,0,0,0]
+            slowStartDone = False
+            slowStartTime = t.perf_counter()
             continue
-
+        elif not slowStartDone:
+            if t.perf_counter() - slowStartTime < 2:
+                fc.SetMotors([.1*(t.perf_counter() - slowStartTime)/2] * 4)
+                continue
+            else:
+                slowStartDone = True
         #Send Motor Commands
         fc.SetMotors(motorCommands)
         '''
