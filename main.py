@@ -267,8 +267,8 @@ controller = Xbox()
 
 safe = Safety()
 
-safe.controller_timeout = 30
-safe.loop_timeout = 30
+safe.controller_timeout = 100
+safe.loop_timeout = 100
 
 fc = FC(pitchPID = PID(
             kp = .003,
