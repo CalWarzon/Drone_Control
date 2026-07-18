@@ -285,11 +285,11 @@ fc = FC(pitchPID = PID(
         motorBL = mBL,
         motorSpeedCoef = 1,
         motorMaxSpeed = 1,
-        motorMaxDelta = .0015,
+        motorMaxDelta = .0005,
         useIMU=True
         )
 '''
-sim = Sim(mass = .25,
+sim = Sim(mass = .25
           arm_length = .1,
           max_thrust_per_motor = 2.5,
           dt = .005,
