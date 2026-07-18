@@ -108,6 +108,10 @@ def FlightControlLoop(fc, xbox, safety,
         #LiveDisplayStep((np.array([[motorCommands[0], motorCommands[1]],[motorCommands[2], motorCommands[3]]]), pitch, roll, yaw, dt))
         
         #Safety Checks
+        if controllerInput['b'] == 1:
+            safety.ResetFailsafe()
+            continue
+
         safety.UpdateLoop()
 
         if safety.CheckFailsafe((roll, pitch, yaw)):
@@ -130,7 +134,7 @@ def FlightControlLoop(fc, xbox, safety,
                     ki = float(input("Enter Ki: ")),
                     kd = float(input("Enter Kd: "))
                 )
-            safety.failsafe = False
+            safety.ResetFailsafe()
             continue
         elif not slowStartDone:
             if t.perf_counter() - slowStartTime < 4:
