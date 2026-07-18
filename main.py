@@ -128,12 +128,15 @@ def FlightControlLoop(fc, xbox, safety,
             slowStartDone = False
             slowStartTime = t.perf_counter()
             if controllerInput['a'] == 1:
-                rawText = input("PID: ")
-                PIDLocations[rawText.lower()].SetCoefs(
-                    kp = float(input("Enter Kp: ")),
-                    ki = float(input("Enter Ki: ")),
-                    kd = float(input("Enter Kd: "))
-                )
+                try:
+                    rawText = input("PID: ")
+                    PIDLocations[rawText.lower()].SetCoefs(
+                        kp = float(input("Enter Kp: ")),
+                        ki = float(input("Enter Ki: ")),
+                        kd = float(input("Enter Kd: "))
+                    )
+                except
+                   print("Invalid PID Selection")
             safety.ResetFailsafe()
             continue
         elif not slowStartDone:
