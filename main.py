@@ -54,6 +54,7 @@ def FlightControlLoop(fc, xbox, safety,
     slowStartTime = t.perf_counter()
     padDown = False
     onPID = 0
+    yDown = False
     PIDList = [{"name": "pkp", "pid": fc.PIDs["pitch"].kp}, {"name": "pki", "pid": fc.PIDs["pitch"].ki}, {"name": "pkd", "pid": fc.PIDs["pitch"].kd},
                {"name": "rkp", "pid": fc.PIDs["roll"].kp}, {"name": "rki", "pid": fc.PIDs["roll"].ki}, {"name": "rkd", "pid": fc.PIDs["roll"].kd},
                {"name": "ykp", "pid": fc.PIDs["yawRate"].kp}, {"name": "yki", "pid": fc.PIDs["yawRate"].ki}, {"name": "ykd", "pid": fc.PIDs["yawRate"].kd}]
@@ -127,13 +128,23 @@ def FlightControlLoop(fc, xbox, safety,
         elif controllerInput['dpad_y'] == -1 and not padDown:
             PIDList[onPID]['pid'] += .00002
             padDown = True
-            print(f"Updated {PIDList[onPID]['name']} to {PIDList[onPID]['pid']:.4f}")
+            print(f"Updated {PIDList[onPID]['name']} to {PIDList[onPID]['pid']:.6f}")
         elif controllerInput['dpad_y'] == 1 and not padDown:   
             PIDList[onPID]['pid'] -= .00002
             padDown = True
-            print(f"Updated {PIDList[onPID]['name']} to {PIDList[onPID]['pid']}")
+            print(f"Updated {PIDList[onPID]['name']} to {PIDList[onPID]['pid']:.6f}")
         elif controllerInput['dpad_x'] == 0 and controllerInput['dpad_y'] == 0:
             padDown = False
+
+        if controllerInput['y'] == 1 and not yDown:
+            data = np.array([[pitch, roll, gz, dt]])
+            yDown = True
+        elif controllerInput['y'] == 1 and yDown:
+            data = np.append(data, [[pitch, roll, gz, dt]], axis=0)
+        elif controllerInput['y'] == 0 and yDown:
+            print(data)
+            data = None
+            yDown = False
 
         #Safety Checks
 
@@ -377,8 +388,8 @@ FlightControlLoop(
     fc = fc, 
     xbox = controller, 
     safety = safe, 
-    baseThrust = .25, 
-    throttleRange = .3,
+    baseThrust = .35, 
+    throttleRange = .4,
     pitchLean = 15,
     rollLean = 15,
     rate = 100, 
