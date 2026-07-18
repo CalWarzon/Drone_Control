@@ -292,9 +292,9 @@ safe = Safety()
 
 
 fc = FC(pitchPID = PID(
-            kp = .008,
-            ki = .0015,
-            kd = .003,
+            kp = .004,
+            ki = .0008,
+            kd = .0015,
             integrator_limit=.3,
             output_limit=.2,
             integral_fade=0.97,
@@ -302,9 +302,9 @@ fc = FC(pitchPID = PID(
             use_gyro_derivative=True
         ), 
         rollPID = PID(
-            kp = .008,
-            ki = .0015,
-            kd = .0035,
+            kp = .004,
+            ki = .0008,
+            kd = .0018,
             integrator_limit=.3,
             output_limit=.2,
             integral_fade=0.97,
@@ -312,8 +312,8 @@ fc = FC(pitchPID = PID(
             use_gyro_derivative=True
         ), 
         yawPID = PID(
-            kp = .006,
-            ki = .003,
+            kp = .003,
+            ki = .0015,
             kd = .000,
             integrator_limit=.3,
             output_limit=.2,
