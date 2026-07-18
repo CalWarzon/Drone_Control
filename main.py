@@ -261,25 +261,25 @@ mFR = ESC(
     pin = 16,
     maxPulseWidth = 2000,
     minPulseWidth = 1000,
-    maxPulseWidthSafe = 1700,
+    maxPulseWidthSafe = 1850,
     minPulseWidthSafe = 1075)
 mFL = ESC(
     pin = 19, 
     maxPulseWidth = 2000,
     minPulseWidth = 1000,
-    maxPulseWidthSafe = 1700,
+    maxPulseWidthSafe = 1850,
     minPulseWidthSafe = 1075)
 mBR = ESC(
     pin = 20, 
     maxPulseWidth = 2000,
     minPulseWidth = 1000,
-    maxPulseWidthSafe = 1700,
+    maxPulseWidthSafe = 1850,
     minPulseWidthSafe = 1075)
 mBL = ESC(
     pin = 26,    
     maxPulseWidth = 2000,
     minPulseWidth = 1000,
-    maxPulseWidthSafe = 1700,
+    maxPulseWidthSafe = 1850,
     minPulseWidthSafe = 1075)
 
 imu = IMU()
@@ -292,9 +292,9 @@ safe = Safety()
 
 
 fc = FC(pitchPID = PID(
-            kp = .002,
-            ki = .000,
-            kd = .00,
+            kp = .008,
+            ki = .0015,
+            kd = .003,
             integrator_limit=.3,
             output_limit=.2,
             integral_fade=0.97,
@@ -302,9 +302,9 @@ fc = FC(pitchPID = PID(
             use_gyro_derivative=True
         ), 
         rollPID = PID(
-            kp = .002,
-            ki = .000,
-            kd = .00,
+            kp = .008,
+            ki = .0015,
+            kd = .0035,
             integrator_limit=.3,
             output_limit=.2,
             integral_fade=0.97,
@@ -312,8 +312,8 @@ fc = FC(pitchPID = PID(
             use_gyro_derivative=True
         ), 
         yawPID = PID(
-            kp = .0006,
-            ki = .00,
+            kp = .006,
+            ki = .003,
             kd = .000,
             integrator_limit=.3,
             output_limit=.2,
