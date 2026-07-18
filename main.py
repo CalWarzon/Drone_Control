@@ -112,24 +112,24 @@ def FlightControlLoop(fc, xbox, safety,
         #LiveDisplayStep((np.array([[motorCommands[0], motorCommands[1]],[motorCommands[2], motorCommands[3]]]), pitch, roll, yaw, dt))
         
         #PID Adjustments
-        if controllerInput['dpad_x'] == 1 and not padDown:
+        if controllerInput['dpad_x'] == -1 and not padDown:
             onPID += 1
-            if onPID > len(PIDList)-1:
+            if onPID == 9:
                 onPID = 0
             padDown = True
             print(f"Selected PID: {PIDList[onPID]['name']}")
-        elif controllerInput['dpad_x'] == -1 and not padDown:
+        elif controllerInput['dpad_x'] == 1 and not padDown:
             onPID -= 1
-            if onPID == 0:
+            if onPID == -1:
                 onPID = len(PIDList)-1
             padDown = True
             print(f"Selected PID: {PIDList[onPID]['name']}")
-        elif controllerInput['dpad_y'] == 1 and not padDown:
-            PIDList[onPID]['pid'] += .0002
+        elif controllerInput['dpad_y'] == -1 and not padDown:
+            PIDList[onPID]['pid'] += .0001
             padDown = True
-            print(f"Updated {PIDList[onPID]['name']} to {PIDList[onPID]['pid']}")
-        elif controllerInput['dpad_y'] == -1 and not padDown:   
-            PIDList[onPID]['pid'] -= .0002
+            print(f"Updated {PIDList[onPID]['name']} to {PIDList[onPID]['pid']:.4f}")
+        elif controllerInput['dpad_y'] == 1 and not padDown:   
+            PIDList[onPID]['pid'] -= .0001
             padDown = True
             print(f"Updated {PIDList[onPID]['name']} to {PIDList[onPID]['pid']}")
         elif controllerInput['dpad_x'] == 0 and controllerInput['dpad_y'] == 0:
