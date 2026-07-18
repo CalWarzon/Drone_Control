@@ -132,10 +132,11 @@ def FlightControlLoop(fc, xbox, safety,
             continue
         elif not slowStartDone:
             if t.perf_counter() - slowStartTime < 2:
-                fc.SetMotors([.1*(t.perf_counter() - slowStartTime)/2] * 4)
+                fc.SetPWM([.1*(t.perf_counter() - slowStartTime)/2 * 1000 + 1000 * 4)
                 continue
             else:
                 slowStartDone = True
+                fc.motorCommand = [0,0,0,0]
         #Send Motor Commands
         fc.SetMotors(motorCommands)
         '''

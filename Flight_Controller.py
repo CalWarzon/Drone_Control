@@ -139,4 +139,8 @@ class Flight_Controller():
         t.sleep(2)
 
         print("Calibration complete")
+    
+    def SetPWM(self, pwm_values):
+        for pwm, motor in zip(pwm_values, self.motors):
+            motor.SetPWM(pwm)
         
