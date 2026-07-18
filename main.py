@@ -359,9 +359,9 @@ FlightControlLoop(
     safety = safe, 
     baseThrust = .25, 
     throttleRange = .3,
-    pitchLean = 45,
-    rollLean = 45,
-    rate = 200, 
+    pitchLean = 15,
+    rollLean = 15,
+    rate = 100, 
     inputEvery = 1, 
     doSim=False
 )
