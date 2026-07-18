@@ -135,7 +135,7 @@ def FlightControlLoop(fc, xbox, safety,
                         ki = float(input("Enter Ki: ")),
                         kd = float(input("Enter Kd: "))
                     )
-                except
+                except:
                    print("Invalid PID Selection")
             safety.ResetFailsafe()
             continue
