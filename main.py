@@ -130,6 +130,7 @@ def FlightControlLoop(fc, xbox, safety,
                     ki = float(input("Enter Ki: ")),
                     kd = float(input("Enter Kd: "))
                 )
+            safety.failsafe = False
             continue
         elif not slowStartDone:
             if t.perf_counter() - slowStartTime < 4:
@@ -268,8 +269,6 @@ controller = Xbox()
 
 safe = Safety()
 
-safe.controller_timeout = 100
-safe.loop_timeout = 100
 
 fc = FC(pitchPID = PID(
             kp = .003,
