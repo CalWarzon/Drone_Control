@@ -52,6 +52,7 @@ def FlightControlLoop(fc, xbox, safety,
     motorCommands = [0,0,0,0]
     slowStartDone = False
     slowStartTime = t.perf_counter()
+    PIDLocations = {"p": fc.pitchPID, "r": fc.rollPID, "y": fc.yawPID}
 
     # Main Control Loop
     #try:
@@ -121,6 +122,13 @@ def FlightControlLoop(fc, xbox, safety,
             fc.motorCommand = [0,0,0,0]
             slowStartDone = False
             slowStartTime = t.perf_counter()
+            if controllerInput['a'] == 1:
+                rawText = input("PID: ")
+                PIDLocations[rawText.lower()].SetCoefs(
+                    kp = float(input("Enter Kp: ")),
+                    ki = float(input("Enter Ki: ")),
+                    kd = float(input("Enter Kd: "))
+                )
             continue
         elif not slowStartDone:
             if t.perf_counter() - slowStartTime < 2:
@@ -257,6 +265,9 @@ imu.SetRotationMatrix(np.array([[0, 1, 0], [-1, 0, 0], [0, 0, 1]])) # Rotate IMU
 controller = Xbox()
 
 safe = Safety()
+
+safe.controller_timeout = 30
+safe.loop_timeout = 30
 
 fc = FC(pitchPID = PID(
             kp = .003,
