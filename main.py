@@ -52,7 +52,11 @@ def FlightControlLoop(fc, xbox, safety,
     motorCommands = [0,0,0,0]
     slowStartDone = False
     slowStartTime = t.perf_counter()
-    PIDLocations = {"p": fc.PIDs["pitch"], "r": fc.PIDs["roll"], "y": fc.PIDs["yawRate"]}
+    padDown = False
+    onPID = 0
+    PIDList = [{"name": "pkp", "pid": fc.PIDs["pitch"].kp}, {"name": "pki", "pid": fc.PIDs["pitch"].ki}, {"name": "pkd", "pid": fc.PIDs["pitch"].kd},
+               {"name": "rkp", "pid": fc.PIDs["roll"].kp}, {"name": "rki", "pid": fc.PIDs["roll"].ki}, {"name": "rkd", "pid": fc.PIDs["roll"].kd},
+               {"name": "ykp", "pid": fc.PIDs["yawRate"].kp}, {"name": "yki", "pid": fc.PIDs["yawRate"].ki}, {"name": "ykd", "pid": fc.PIDs["yawRate"].kd}]
 
     fc.ArmMotors()
     # Main Control Loop
@@ -107,10 +111,31 @@ def FlightControlLoop(fc, xbox, safety,
          
         #LiveDisplayStep((np.array([[motorCommands[0], motorCommands[1]],[motorCommands[2], motorCommands[3]]]), pitch, roll, yaw, dt))
         
+        #PID Adjustments
+        if controllerInput['dpad_x'] == 1 and not padDown:
+            onPID += 1
+            if onPID > len(PIDList)-1:
+                onPID = 0
+            padDown = True
+            print(f"Selected PID: {PIDList[onPID]['name']}")
+        elif controllerInput['dpad_x'] == -1 and not padDown:
+            onPID -= 1
+            if onPID == 0:
+                onPID = len(PIDList)-1
+            padDown = True
+            print(f"Selected PID: {PIDList[onPID]['name']}")
+        elif controllerInput['dpad_y'] == 1 and not padDown:
+            PIDList[onPID]['pid'] += .0002
+            padDown = True
+            print(f"Updated {PIDList[onPID]['name']} to {PIDList[onPID]['pid']}")
+        elif controllerInput['dpad_y'] == -1 and not padDown:   
+            PIDList[onPID]['pid'] -= .0002
+            padDown = True
+            print(f"Updated {PIDList[onPID]['name']} to {PIDList[onPID]['pid']}")
+        elif controllerInput['dpad_x'] == 0 and controllerInput['dpad_y'] == 0:
+            padDown = False
+
         #Safety Checks
-        if controllerInput['b'] == 1:
-            safety.ResetFailsafe()
-            continue
 
         safety.UpdateLoop()
 
@@ -127,17 +152,6 @@ def FlightControlLoop(fc, xbox, safety,
             fc.motorCommand = [0,0,0,0]
             slowStartDone = False
             slowStartTime = t.perf_counter()
-            if controllerInput['a'] == 1:
-                try:
-                    rawText = input("PID: ")
-                    PIDLocations[rawText.lower()].SetCoefs(
-                        kp = float(input("Enter Kp: ")),
-                        ki = float(input("Enter Ki: ")),
-                        kd = float(input("Enter Kd: "))
-                    )
-                except:
-                   print("Invalid PID Selection")
-            safety.ResetFailsafe()
             continue
         elif not slowStartDone:
             if t.perf_counter() - slowStartTime < 4:
@@ -278,7 +292,7 @@ safe = Safety()
 
 
 fc = FC(pitchPID = PID(
-            kp = .003,
+            kp = .002,
             ki = .000,
             kd = .00,
             integrator_limit=.3,
@@ -288,7 +302,7 @@ fc = FC(pitchPID = PID(
             use_gyro_derivative=True
         ), 
         rollPID = PID(
-            kp = .003,
+            kp = .002,
             ki = .000,
             kd = .00,
             integrator_limit=.3,
@@ -298,7 +312,7 @@ fc = FC(pitchPID = PID(
             use_gyro_derivative=True
         ), 
         yawPID = PID(
-            kp = .0005,
+            kp = .0006,
             ki = .00,
             kd = .000,
             integrator_limit=.3,
