@@ -52,7 +52,7 @@ def FlightControlLoop(fc, xbox, safety,
     motorCommands = [0,0,0,0]
     slowStartDone = False
     slowStartTime = t.perf_counter()
-    PIDLocations = {"p": fc.pitchPID, "r": fc.rollPID, "y": fc.yawPID}
+    PIDLocations = {"p": fc.PIDs["pitch"], "r": fc.PIDs["roll"], "y": fc.PIDs["yawRate"]}
 
     # Main Control Loop
     #try:
