@@ -101,7 +101,7 @@ def FlightControlLoop(fc, xbox, safety,
         motorCommands, roll, pitch, yaw = fc.LoopStep(throttle, target_pitch, target_roll, target_yaw_rate, dt)
         #motorCommands, roll, pitch, yaw = fc.LoopStep(throttle, target_pitch, target_roll, target_yaw_rate, dt, pitch, roll, yaw, gx, gy, gz)
          
-        LiveDisplayStep((np.array([[motorCommands[0], motorCommands[1]],[motorCommands[2], motorCommands[3]]]), pitch, roll, yaw, dt))
+        #LiveDisplayStep((np.array([[motorCommands[0], motorCommands[1]],[motorCommands[2], motorCommands[3]]]), pitch, roll, yaw, dt))
         
         #Safety Checks
         safety.UpdateLoop()
@@ -220,25 +220,25 @@ mFR = ESC(
     maxPulseWidth = 2000,
     minPulseWidth = 1000,
     maxPulseWidthSafe = 1700,
-    minPulseWidthSafe = 1080)
+    minPulseWidthSafe = 1075)
 mFL = ESC(
     pin = 19, 
     maxPulseWidth = 2000,
     minPulseWidth = 1000,
     maxPulseWidthSafe = 1700,
-    minPulseWidthSafe = 1080)
+    minPulseWidthSafe = 1075)
 mBR = ESC(
     pin = 20, 
     maxPulseWidth = 2000,
     minPulseWidth = 1000,
     maxPulseWidthSafe = 1700,
-    minPulseWidthSafe = 1080)
+    minPulseWidthSafe = 1075)
 mBL = ESC(
     pin = 26,    
     maxPulseWidth = 2000,
     minPulseWidth = 1000,
     maxPulseWidthSafe = 1700,
-    minPulseWidthSafe = 1080)
+    minPulseWidthSafe = 1075)
 
 imu = IMU()
 imu.LoadCalibration("IMU_cal_v1")
@@ -285,7 +285,7 @@ fc = FC(pitchPID = PID(
         motorBL = mBL,
         motorSpeedCoef = 1,
         motorMaxSpeed = 1,
-        motorMaxDelta = .003,
+        motorMaxDelta = .0015,
         useIMU=True
         )
 '''
