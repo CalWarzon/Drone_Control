@@ -259,9 +259,9 @@ controller = Xbox()
 safe = Safety()
 
 fc = FC(pitchPID = PID(
-            kp = .008,
-            ki = .007,
-            kd = .0018,
+            kp = .003,
+            ki = .000,
+            kd = .00,
             integrator_limit=.3,
             output_limit=.2,
             integral_fade=0.97,
@@ -269,9 +269,9 @@ fc = FC(pitchPID = PID(
             use_gyro_derivative=True
         ), 
         rollPID = PID(
-            kp = .008,
-            ki = .007,
-            kd = .0018,
+            kp = .003,
+            ki = .000,
+            kd = .00,
             integrator_limit=.3,
             output_limit=.2,
             integral_fade=0.97,
@@ -279,9 +279,9 @@ fc = FC(pitchPID = PID(
             use_gyro_derivative=True
         ), 
         yawPID = PID(
-            kp = .001,
-            ki = .0012,
-            kd = .0001,
+            kp = .0005,
+            ki = .00,
+            kd = .000,
             integrator_limit=.3,
             output_limit=.2,
             integral_fade=0.97,
