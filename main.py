@@ -343,7 +343,7 @@ fc = FC(pitchPID = PID(
         motorBL = mBL,
         motorSpeedCoef = 1,
         motorMaxSpeed = 1,
-        motorMaxDelta = .007,
+        motorMaxDelta = .0007,
         useIMU=True
         )
 '''
