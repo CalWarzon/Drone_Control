@@ -165,8 +165,8 @@ def FlightControlLoop(fc, xbox, safety,
             slowStartTime = t.perf_counter()
             continue
         elif not slowStartDone:
-            if t.perf_counter() - slowStartTime < 6:
-                fc.SetPWM([.1*(t.perf_counter() - slowStartTime)/6 * 1000 + 1000] * 4)
+            if t.perf_counter() - slowStartTime < 1.5:
+                fc.SetPWM([.1*(t.perf_counter() - slowStartTime)/1.5 * 1000 + 1000] * 4)
                 continue
             else:
                 slowStartDone = True
