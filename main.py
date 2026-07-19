@@ -168,7 +168,6 @@ def FlightControlLoop(fc, xbox, safety,
         elif not slowStartDone:
             if t.perf_counter() - slowStartTime < 4:
                 fc.SetPWM([.2*(t.perf_counter() - slowStartTime)/4 * 1000 + 1000] * 4)
-                print(.2*(t.perf_counter() - slowStartTime)/4 * 1000 + 1000)
                 continue
             else:
                 slowStartDone = True
@@ -277,25 +276,25 @@ mFR = ESC(
     maxPulseWidth = 2000,
     minPulseWidth = 1000,
     maxPulseWidthSafe = 1850,
-    minPulseWidthSafe = 1085)
+    minPulseWidthSafe = 1080)
 mFL = ESC(
     pin = 19, 
     maxPulseWidth = 2000,
     minPulseWidth = 1000,
     maxPulseWidthSafe = 1850,
-    minPulseWidthSafe = 1085)
+    minPulseWidthSafe = 1080)
 mBR = ESC(
     pin = 20, 
     maxPulseWidth = 2000,
     minPulseWidth = 1000,
     maxPulseWidthSafe = 1850,
-    minPulseWidthSafe = 1085)
+    minPulseWidthSafe = 1080)
 mBL = ESC(
     pin = 26,    
     maxPulseWidth = 2000,
     minPulseWidth = 1000,
     maxPulseWidthSafe = 1850,
-    minPulseWidthSafe = 1085)
+    minPulseWidthSafe = 1080)
 
 imu = IMU()
 imu.LoadCalibration("IMU_cal_v1")
@@ -343,7 +342,7 @@ fc = FC(pitchPID = PID(
         motorBL = mBL,
         motorSpeedCoef = 1,
         motorMaxSpeed = 1,
-        motorMaxDelta = .0007,
+        motorMaxDelta = .007,
         useIMU=True
         )
 '''
