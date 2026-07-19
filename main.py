@@ -171,7 +171,8 @@ def FlightControlLoop(fc, xbox, safety,
                 continue
             else:
                 slowStartDone = True
-                fc.motorCommand = [0,0,0,0]
+                fc.motorCommand = [.15,.15,.15,.15]
+                fc.lastMotorCommand = [.15,.15,.15,.15]
         #Send Motor Commands
         fc.SetMotors(motorCommands)
         '''
