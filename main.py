@@ -342,7 +342,7 @@ fc = FC(pitchPID = PID(
         motorBL = mBL,
         motorSpeedCoef = 1,
         motorMaxSpeed = 1,
-        motorMaxDelta = .007,
+        motorMaxDelta = .003,
         useIMU=True
         )
 '''
@@ -386,7 +386,11 @@ for i in range(100):
 fc.KillMotors()
 '''
 
+fc.ArmMotors()
+fc.SetMotors([0,0,0,0])
+fc.KillMotors()
 
+'''
 FlightControlLoop(
     fc = fc, 
     xbox = controller, 
@@ -399,5 +403,5 @@ FlightControlLoop(
     inputEvery = 1, 
     doSim=False
 )
-
+'''
 
