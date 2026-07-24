@@ -126,11 +126,11 @@ def FlightControlLoop(fc, xbox, safety,
             padDown = True
             print(f"Selected PID: {PIDList[onPID]['name']}")
         elif controllerInput['dpad_y'] == -1 and not padDown:
-            PIDList[onPID]['pid'] += .00002
+            PIDList[onPID]['pid'] += .0001
             padDown = True
             print(f"Updated {PIDList[onPID]['name']} to {PIDList[onPID]['pid']:.6f}")
         elif controllerInput['dpad_y'] == 1 and not padDown:   
-            PIDList[onPID]['pid'] -= .00002
+            PIDList[onPID]['pid'] -= .0001
             padDown = True
             print(f"Updated {PIDList[onPID]['name']} to {PIDList[onPID]['pid']:.6f}")
         elif controllerInput['dpad_x'] == 0 and controllerInput['dpad_y'] == 0:
@@ -306,9 +306,9 @@ safe = Safety()
 
 
 fc = FC(pitchPID = PID(
-            kp = .05,
+            kp = .001,
             ki = .000,
-            kd = .002,
+            kd = .000,
             integrator_limit=.3,
             output_limit=.2,
             integral_fade=0.97,
@@ -316,9 +316,9 @@ fc = FC(pitchPID = PID(
             use_gyro_derivative=True
         ), 
         rollPID = PID(
-            kp = .05,
+            kp = .001,
             ki = .000,
-            kd = .002,
+            kd = .000,
             integrator_limit=.3,
             output_limit=.2,
             integral_fade=0.97,
@@ -326,9 +326,9 @@ fc = FC(pitchPID = PID(
             use_gyro_derivative=True
         ), 
         yawPID = PID(
-            kp = .005,
-            ki = .0015,
-            kd = .0005,
+            kp = .0015,
+            ki = .000,
+            kd = .0000,
             integrator_limit=.3,
             output_limit=.2,
             integral_fade=0.97,
