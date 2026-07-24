@@ -386,12 +386,13 @@ for i in range(100):
 fc.KillMotors()
 '''
 
+'''
 fc.ArmMotors()
 fc.SetMotors([0,0,0,0])
 t.sleep(3)
 fc.KillMotors()
-
 '''
+
 FlightControlLoop(
     fc = fc, 
     xbox = controller, 
@@ -404,5 +405,5 @@ FlightControlLoop(
     inputEvery = 1, 
     doSim=False
 )
-'''
+
 
