@@ -388,7 +388,7 @@ fc.KillMotors()
 
 fc.ArmMotors()
 fc.SetMotors([0,0,0,0])
-t.sleep(1)
+t.sleep(3)
 fc.KillMotors()
 
 '''
